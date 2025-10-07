@@ -1,0 +1,117 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                   🚀 ELEVATE SKILL - QUICK TEST GUIDE                     ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+📍 SERVICES RUNNING:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Backend API:    http://localhost:8004
+✅ Frontend:       http://localhost:8083 (may be 8082 or 8080)
+✅ API Docs:       http://localhost:8004/docs
+✅ Database:       PostgreSQL (Connected)
+
+🔧 QUICK TESTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1️⃣  REGISTRATION TEST:
+    • Open: http://localhost:8083 (or check which port your frontend is using)
+    • Click "Register" / "Sign Up"
+    • Test password visibility toggle (eye icon) 👁️
+    • Fill form:
+      - Full Name: Your Name
+      - Email: test@example.com (use unique email)
+      - Password: MyPass123 (toggle visibility)
+      - Phone: +251912345678 (optional)
+    • Submit and verify:
+      ✓ Success message appears
+      ✓ Redirects to dashboard
+      ✓ Token stored in browser (F12 → Application → Local Storage)
+
+2️⃣  LOGIN TEST:
+    • Navigate to: http://localhost:8082/login
+    • Test password visibility toggle 👁️
+    • Login with registered credentials
+    • Verify:
+      ✓ Success message
+      ✓ Dashboard loads
+      ✓ User data displayed
+
+3️⃣  DASHBOARD TEST:
+    • Check:
+      ✓ Profile info displayed
+      ✓ Referral code visible (ELEVATE...)
+      ✓ Course statistics shown
+      ✓ Navigation works
+
+4️⃣  COURSES TEST:
+    • Browse courses (should see 7 courses)
+    • Click on a course
+    • Try to enroll
+    • Select payment method
+    • Submit payment
+    • Verify "Pending approval" status
+
+5️⃣  ADMIN PANEL TEST:
+    • Navigate to: http://localhost:8082/admin/login
+    • Login:
+      - Email: admin@elevateskil.com
+      - Password: admin123
+    • Test:
+      ✓ User management
+      ✓ Payment approval
+      ✓ Course management
+      ✓ Analytics dashboard
+
+🎯 KEY FEATURES TO TEST:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Password Visibility Toggle (Eye icon in password fields)
+✅ Form Validation (Try submitting invalid data)
+✅ Error Messages (Test with wrong credentials)
+✅ Loading States (Watch for spinners during API calls)
+✅ Toast Notifications (Success/Error messages)
+✅ Token System (30-day access, 90-day refresh)
+✅ Referral System (Copy your referral code)
+✅ Course Enrollment (Full payment flow)
+✅ Admin Approval (Admin approves payments)
+
+🔍 DEBUGGING TIPS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Browser Console: Press F12 → Console tab (check for errors)
+• Network Tab: F12 → Network tab (check API calls)
+• Local Storage: F12 → Application → Local Storage (check tokens)
+• Backend Logs: Terminal running backend server (check errors)
+
+🐛 COMMON ISSUES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• "Email already registered" → Use a different email
+• "Network Error" → Check if backend is running (curl http://localhost:8004/health)
+• "CORS Error" → Backend should allow port 8082 (already configured)
+• Page not loading → Clear browser cache (Ctrl+Shift+R)
+
+✅ SUCCESS CRITERIA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Registration works with password toggle
+✓ Login works with correct credentials
+✓ Dashboard displays real user data
+✓ Courses load from database (7 courses)
+✓ Enrollment and payment flow complete
+✓ Admin panel accessible and functional
+✓ No console errors during normal operation
+
+📚 DETAILED GUIDES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Full Testing Guide: FRONTEND_TESTING_GUIDE.md
+• Test Results: INTEGRATION_TEST_RESULTS.md
+• API Documentation: http://localhost:8004/docs
+
+🚀 START TESTING NOW:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Open your browser
+2. Navigate to: http://localhost:8082
+3. Start with registration test
+4. Follow the checklist above
+
+💡 TIP: Keep this terminal open to see backend logs in real-time!
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                  🎉 Happy Testing! Everything is ready!                   ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+

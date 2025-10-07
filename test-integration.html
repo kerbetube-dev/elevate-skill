@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend-Backend Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Frontend-Backend Integration Test</h1>
+    
+    <div class="test">
+        <h3>Test 1: Backend Health Check</h3>
+        <button onclick="testBackendHealth()">Test Backend Health</button>
+        <div id="backend-health-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>Test 2: Courses API</h3>
+        <button onclick="testCoursesAPI()">Test Courses API</button>
+        <div id="courses-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>Test 3: User Registration</h3>
+        <button onclick="testUserRegistration()">Test User Registration</button>
+        <div id="registration-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>Test 4: User Login</h3>
+        <button onclick="testUserLogin()">Test User Login</button>
+        <div id="login-result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8002';
+        
+        async function testBackendHealth() {
+            const resultDiv = document.getElementById('backend-health-result');
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                resultDiv.parentElement.className = 'test success';
+            } catch (error) {
+                resultDiv.innerHTML = `<pre>Error: ${error.message}</pre>`;
+                resultDiv.parentElement.className = 'test error';
+            }
+        }
+
+        async function testCoursesAPI() {
+            const resultDiv = document.getElementById('courses-result');
+            try {
+                const response = await fetch(`${API_BASE_URL}/courses/`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<pre>Found ${data.length} courses:\n${JSON.stringify(data.slice(0, 2), null, 2)}...</pre>`;
+                resultDiv.parentElement.className = 'test success';
+            } catch (error) {
+                resultDiv.innerHTML = `<pre>Error: ${error.message}</pre>`;
+                resultDiv.parentElement.className = 'test error';
+            }
+        }
+
+        async function testUserRegistration() {
+            const resultDiv = document.getElementById('registration-result');
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        fullName: 'Test User',
+                        email: 'testuser@example.com',
+                        password: 'Pass123'
+                    })
+                });
+                const data = await response.json();
+                resultDiv.innerHTML = `<pre>Registration successful:\n${JSON.stringify(data, null, 2)}</pre>`;
+                resultDiv.parentElement.className = 'test success';
+            } catch (error) {
+                resultDiv.innerHTML = `<pre>Error: ${error.message}</pre>`;
+                resultDiv.parentElement.className = 'test error';
+            }
+        }
+
+        async function testUserLogin() {
+            const resultDiv = document.getElementById('login-result');
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'testuser@example.com',
+                        password: 'Pass123'
+                    })
+                });
+                const data = await response.json();
+                resultDiv.innerHTML = `<pre>Login successful:\n${JSON.stringify(data, null, 2)}</pre>`;
+                resultDiv.parentElement.className = 'test success';
+            } catch (error) {
+                resultDiv.innerHTML = `<pre>Error: ${error.message}</pre>`;
+                resultDiv.parentElement.className = 'test error';
+            }
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            testBackendHealth();
+            testCoursesAPI();
+        };
+    </script>
+</body>
+</html>

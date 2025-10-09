@@ -49,9 +49,12 @@ const LoginForm = () => {
       navigate('/dashboard');
       
     } catch (error) {
+      // Extract the actual error message from backend response
+      const errorMessage = error instanceof Error ? error.message : "Invalid email or password.";
+
       toast({
         title: "Login Failed",
-        description: error instanceof Error ? error.message : "Invalid email or password.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

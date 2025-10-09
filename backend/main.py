@@ -128,7 +128,7 @@ class UserLogin(BaseModel):
 
 class PaymentMethod(BaseModel):
     type: str  # 'cbe' or 'telebirr'
-    accountNumber: str
+    account_number: str
     holderName: str
 
 class CourseEnrollment(BaseModel):
@@ -203,7 +203,7 @@ async def register(user: UserRegister):
         "password": hashed_password,
         "referralCode": referral_code,
         "referredBy": user.referralCode,
-        "createdAt": datetime.utcnow().isoformat(),
+        "created_at": datetime.utcnow().isoformat(),
         "enrolledCourses": [],
         "totalEarnings": 0
     }
@@ -303,7 +303,7 @@ async def get_user_profile(current_user: dict = Depends(get_current_user)):
             "id": current_user["id"],
             "fullName": current_user["fullName"],
             "email": current_user["email"],
-            "memberSince": current_user["createdAt"],
+            "memberSince": current_user["created_at"],
             "referralCode": current_user["referralCode"],
             "totalEarnings": current_user.get("totalEarnings", 0)
         },
@@ -389,10 +389,10 @@ async def add_payment_method(
     new_method = {
         "id": method_id,
         "type": payment_method.type,
-        "accountNumber": payment_method.accountNumber,
+        "account_number": payment_method.account_number,
         "holderName": payment_method.holderName,
         "isDefault": len(payment_methods_db.get(current_user["email"], [])) == 0,
-        "createdAt": datetime.utcnow().isoformat()
+        "created_at": datetime.utcnow().isoformat()
     }
     
     if current_user["email"] not in payment_methods_db:

@@ -12,7 +12,15 @@ import {
   Clock,
   RefreshCw,
   CreditCard,
-  Smartphone
+  Smartphone,
+  Filter,
+  Search,
+  User,
+  Calendar,
+  Eye,
+  AlertCircle,
+  TrendingUp,
+  Banknote
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { withdrawalsService, WithdrawalResponse } from '@/services/withdrawals';
@@ -25,8 +33,10 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onRefresh }
   const [withdrawals, setWithdrawals] = useState<WithdrawalResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [adminNotes, setAdminNotes] = useState<Record<string, string>>({});
-  const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({});
+  const [admin_notes, setadmin_notes] = useState<Record<string, string>>({});
+  const [rejection_reasons, setrejection_reasons] = useState<Record<string, string>>({});
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const { toast } = useToast();
 
   const fetchWithdrawals = async () => {
@@ -49,10 +59,40 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onRefresh }
     fetchWithdrawals();
   }, []);
 
+  // Filter withdrawals based on status and search term
+  const filteredWithdrawals = withdrawals.filter((withdrawal) => {
+    const matchesStatus = filterStatus === 'all' || withdrawal.status === filterStatus;
+    const matchesSearch = searchTerm === '' || 
+      withdrawal.account_holder_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      withdrawal.account_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      withdrawal.account_type.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  // Group withdrawals by status for better organization
+  const groupedWithdrawals = {
+    pending: filteredWithdrawals.filter(w => w.status === 'pending'),
+    approved: filteredWithdrawals.filter(w => w.status === 'approved'),
+    rejected: filteredWithdrawals.filter(w => w.status === 'rejected')
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 whitespace-nowrap"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
+      case 'approved':
+        return <Badge variant="default" className="bg-green-100 text-green-800 text-xs px-2 py-1 whitespace-nowrap"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive" className="text-xs px-2 py-1 whitespace-nowrap"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
+      default:
+        return <Badge variant="outline" className="text-xs px-2 py-1 whitespace-nowrap">{status}</Badge>;
+    }
+  };
+
   const handleApprove = async (withdrawalId: string) => {
     setProcessingId(withdrawalId);
     try {
-      await withdrawalsService.approveWithdrawal(withdrawalId, adminNotes[withdrawalId] || '');
+      await withdrawalsService.approveWithdrawal(withdrawalId, admin_notes[withdrawalId] || '');
       
       toast({
         title: "Withdrawal Approved",
@@ -61,7 +101,7 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onRefresh }
       });
 
       // Clear notes
-      setAdminNotes(prev => ({ ...prev, [withdrawalId]: '' }));
+      setadmin_notes(prev => ({ ...prev, [withdrawalId]: '' }));
       
       // Refresh data
       await fetchWithdrawals();
@@ -78,7 +118,7 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onRefresh }
   };
 
   const handleReject = async (withdrawalId: string) => {
-    if (!rejectionReasons[withdrawalId]) {
+    if (!rejection_reasons[withdrawalId]) {
       toast({
         title: "Error",
         description: "Please provide a rejection reason",
@@ -89,7 +129,7 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onRefresh }
 
     setProcessingId(withdrawalId);
     try {
-      await withdrawalsService.rejectWithdrawal(withdrawalId, rejectionReasons[withdrawalId]);
+      await withdrawalsService.rejectWithdrawal(withdrawalId, rejection_reasons[withdrawalId]);
       
       toast({
         title: "Withdrawal Rejected",
@@ -98,7 +138,7 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onRefresh }
       });
 
       // Clear rejection reason
-      setRejectionReasons(prev => ({ ...prev, [withdrawalId]: '' }));
+      setrejection_reasons(prev => ({ ...prev, [withdrawalId]: '' }));
       
       // Refresh data
       await fetchWithdrawals();
@@ -114,259 +154,231 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onRefresh }
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'rejected':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'approved':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Approved</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive">Rejected</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
-  const approvedWithdrawals = withdrawals.filter(w => w.status === 'approved');
-  const rejectedWithdrawals = withdrawals.filter(w => w.status === 'rejected');
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-green-600" />
-            Withdrawal Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <span className="ml-2">Loading withdrawal requests...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-yellow-500" />
-              <div>
-                <div className="text-2xl font-bold text-yellow-600">{pendingWithdrawals.length}</div>
-                <div className="text-sm text-gray-600">Pending Requests</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <div>
-                <div className="text-2xl font-bold text-green-600">{approvedWithdrawals.length}</div>
-                <div className="text-sm text-gray-600">Approved</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <XCircle className="h-5 w-5 text-red-500" />
-              <div>
-                <div className="text-2xl font-bold text-red-600">{rejectedWithdrawals.length}</div>
-                <div className="text-sm text-gray-600">Rejected</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Withdrawal Requests */}
-      <Card>
-        <CardHeader>
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-green-600" />
-                Withdrawal Requests
-              </CardTitle>
-              <CardDescription>
-                Review and manage user withdrawal requests
-              </CardDescription>
+            <h2 className="text-2xl font-bold mb-2">Withdrawal Requests</h2>
+            <p className="text-green-100">Manage withdrawal requests from users</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              <div className="text-3xl font-bold">{filteredWithdrawals.length}</div>
+              <div className="text-green-100 text-sm">Total Requests</div>
             </div>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={fetchWithdrawals}
               disabled={loading}
+              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
             >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          {withdrawals.length === 0 ? (
-            <Alert>
-              <DollarSign className="h-4 w-4" />
-              <AlertDescription>
-                No withdrawal requests found.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <div className="space-y-4">
-              {withdrawals.map((withdrawal) => (
-                <Card key={withdrawal.id} className="border-l-4 border-l-green-500">
-                  <CardContent className="pt-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(withdrawal.status)}
-                        <span className="font-semibold text-lg">
-                          {withdrawal.amount.toFixed(2)} ETB
-                        </span>
-                      </div>
-                      {getStatusBadge(withdrawal.status)}
-                    </div>
+        </div>
+      </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
-                      <div>
-                        <p className="text-gray-600">
-                          <strong>Account Type:</strong> {withdrawal.accountType}
-                        </p>
-                        <p className="text-gray-600">
-                          <strong>Account Number:</strong> {withdrawal.accountNumber}
-                        </p>
-                        <p className="text-gray-600">
-                          <strong>Account Holder:</strong> {withdrawal.accountHolderName}
-                        </p>
-                        {withdrawal.phoneNumber && (
-                          <p className="text-gray-600">
-                            <strong>Phone:</strong> {withdrawal.phoneNumber}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-gray-600">
-                          <strong>Requested:</strong> {formatDate(withdrawal.createdAt)}
-                        </p>
-                        {withdrawal.processedAt && (
-                          <p className="text-gray-600">
-                            <strong>Processed:</strong> {formatDate(withdrawal.processedAt)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+      {/* Filters and Search */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search by account holder, account number, or type..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            
+            {/* Status Filter */}
+            <div className="flex gap-2">
+              <Button
+                variant={filterStatus === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('all')}
+                className="flex items-center gap-2"
+              >
+                <Filter className="w-4 h-4" />
+                All ({withdrawals.length})
+              </Button>
+              <Button
+                variant={filterStatus === 'pending' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('pending')}
+                className="flex items-center gap-2"
+              >
+                <Clock className="w-4 h-4" />
+                Pending ({groupedWithdrawals.pending.length})
+              </Button>
+              <Button
+                variant={filterStatus === 'approved' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('approved')}
+                className="flex items-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Approved ({groupedWithdrawals.approved.length})
+              </Button>
+              <Button
+                variant={filterStatus === 'rejected' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterStatus('rejected')}
+                className="flex items-center gap-2"
+              >
+                <XCircle className="w-4 h-4" />
+                Rejected ({groupedWithdrawals.rejected.length})
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-                    {/* Admin Actions for Pending Requests */}
+      {/* Withdrawal Requests Grid */}
+      {loading ? (
+        <div className="text-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-green-600" />
+          <p className="text-gray-600">Loading withdrawal requests...</p>
+        </div>
+      ) : filteredWithdrawals.length === 0 ? (
+        <Card>
+          <CardContent className="text-center py-12">
+            <DollarSign className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Withdrawal Requests Found</h3>
+            <p className="text-gray-500">
+              {searchTerm || filterStatus !== 'all' 
+                ? 'Try adjusting your search or filter criteria.' 
+                : 'No withdrawal requests have been submitted yet.'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+          {filteredWithdrawals.map((withdrawal) => (
+            <Card key={withdrawal.id} className="hover:shadow-xl transition-all duration-300 shadow-md border-0 bg-white">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Banknote className="w-5 h-5 text-white" />
+                      </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-gray-900 truncate">{withdrawal.account_holder_name}</h3>
+                      <p className="text-sm text-gray-500 truncate">{withdrawal.account_type}</p>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    {getStatusBadge(withdrawal.status)}
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-5 p-6">
+                {/* Amount Info */}
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <DollarSign className="w-4 h-4 text-green-600" />
+                    <span className="font-medium text-gray-800">Amount</span>
+                  </div>
+                  <p className="text-lg font-bold text-green-600">{withdrawal.amount} ETB</p>
+                </div>
+
+                {/* Account Details */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Account Number</span>
+                    <span className="text-sm font-medium">{withdrawal.account_number}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Account Type</span>
+                    <span className="text-sm font-medium">{withdrawal.account_type}</span>
+                  </div>
+                        {withdrawal.phone_number && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Phone</span>
+                      <span className="text-sm font-medium">{withdrawal.phone_number}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Requested</span>
+                    <span className="text-sm">{new Date(withdrawal.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+                {/* Admin Notes */}
+                {withdrawal.admin_notes && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <AlertCircle className="w-4 h-4 text-gray-600" />
+                      <span className="text-sm font-medium text-gray-800">Admin Notes</span>
+                    </div>
+                    <p className="text-sm text-gray-700">{withdrawal.admin_notes}</p>
+                      </div>
+                )}
+
+                {/* Rejection Reason */}
+                {withdrawal.rejection_reason && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <XCircle className="w-4 h-4 text-red-600" />
+                      <span className="text-sm font-medium text-red-800">Rejection Reason</span>
+                    </div>
+                    <p className="text-sm text-red-700">{withdrawal.rejection_reason}</p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
                     {withdrawal.status === 'pending' && (
-                      <div className="space-y-3 p-3 bg-gray-50 rounded-md">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">
-                            Admin Notes (Optional)
-                          </label>
+                  <div className="space-y-4 pt-4">
+                    <div className="space-y-2">
                           <Textarea
-                            placeholder="Add notes for the user..."
-                            value={adminNotes[withdrawal.id] || ''}
-                            onChange={(e) => setAdminNotes(prev => ({ 
-                              ...prev, 
-                              [withdrawal.id]: e.target.value 
-                            }))}
-                            className="mt-1"
-                            rows={2}
-                          />
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">
-                            Rejection Reason (Required for rejection)
-                          </label>
-                          <Textarea
-                            placeholder="Provide reason for rejection..."
-                            value={rejectionReasons[withdrawal.id] || ''}
-                            onChange={(e) => setRejectionReasons(prev => ({ 
-                              ...prev, 
-                              [withdrawal.id]: e.target.value 
-                            }))}
-                            className="mt-1"
-                            rows={2}
-                          />
-                        </div>
-                        <div className="flex gap-2">
+                        placeholder="Add admin notes (optional)"
+                            value={admin_notes[withdrawal.id] || ''}
+                        onChange={(e) => setadmin_notes(prev => ({ ...prev, [withdrawal.id]: e.target.value }))}
+                        className="w-full h-20 text-sm"
+                      />
                           <Button
+                        size="sm"
                             onClick={() => handleApprove(withdrawal.id)}
                             disabled={processingId === withdrawal.id}
-                            className="bg-green-600 hover:bg-green-700"
+                        className="w-full bg-green-600 hover:bg-green-700 shadow-sm"
                           >
                             {processingId === withdrawal.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
-                              <CheckCircle className="h-4 w-4 mr-2" />
+                          <CheckCircle className="w-4 h-4" />
                             )}
                             Approve
                           </Button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Textarea
+                        placeholder="Rejection reason (required)"
+                        value={rejection_reasons[withdrawal.id] || ''}
+                        onChange={(e) => setrejection_reasons(prev => ({ ...prev, [withdrawal.id]: e.target.value }))}
+                        className="w-full h-20 text-sm"
+                      />
                           <Button
+                        size="sm"
+                        variant="destructive"
                             onClick={() => handleReject(withdrawal.id)}
-                            disabled={processingId === withdrawal.id}
-                            variant="destructive"
-                          >
-                            {processingId === withdrawal.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            ) : (
-                              <XCircle className="h-4 w-4 mr-2" />
-                            )}
+                        disabled={processingId === withdrawal.id || !rejection_reasons[withdrawal.id]}
+                        className="w-full shadow-sm"
+                      >
+                        <XCircle className="w-4 h-4" />
                             Reject
                           </Button>
                         </div>
-                      </div>
-                    )}
-
-                    {/* Show admin notes and rejection reason for processed requests */}
-                    {withdrawal.adminNotes && (
-                      <div className="mt-3 p-3 bg-blue-50 rounded-md">
-                        <p className="text-sm">
-                          <strong>Admin Notes:</strong> {withdrawal.adminNotes}
-                        </p>
-                      </div>
-                    )}
-
-                    {withdrawal.rejectionReason && (
-                      <div className="mt-3 p-3 bg-red-50 rounded-md">
-                        <p className="text-sm text-red-700">
-                          <strong>Rejection Reason:</strong> {withdrawal.rejectionReason}
-                        </p>
                       </div>
                     )}
                   </CardContent>
@@ -374,8 +386,6 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onRefresh }
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
     </div>
   );
 };

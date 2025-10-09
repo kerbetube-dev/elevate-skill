@@ -1,11 +1,14 @@
-from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List
+from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File, Form
+from typing import List, Optional
+import json
 from models import (
     AdminLogin, 
     AdminUserResponse, 
     PaymentRequestResponse, 
     PaymentApprovalRequest,
-    TokenResponse
+    TokenResponse,
+    CourseCreate,
+    CourseUpdate
 )
 from auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user
 from secure_auth import secure_auth
@@ -80,7 +83,7 @@ async def admin_login(admin: AdminLogin):
             "fullName": admin_user["full_name"],
             "role": admin_user["role"],
             "referralCode": "ADMIN",  # Admins don't have referral codes
-            "createdAt": admin_user["created_at"].isoformat()
+            "created_at": admin_user["created_at"].isoformat()
         }
     }
 
@@ -93,7 +96,7 @@ async def get_admin_profile(current_admin: dict = Depends(get_current_admin)):
         "fullName": current_admin["full_name"],
         "role": current_admin["role"],
         "isActive": current_admin["is_active"],
-        "createdAt": current_admin["created_at"].isoformat(),
+        "created_at": current_admin["created_at"].isoformat(),
         "lastLogin": current_admin["last_login"].isoformat() if current_admin["last_login"] else None
     }
 
@@ -118,18 +121,18 @@ async def get_payment_requests(
             "transactionScreenshotUrl": req.get("transaction_screenshot_url", ""),
             "transactionReference": req.get("transaction_reference"),
             "status": req["status"],
-            "adminNotes": req.get("admin_notes"),
-            "createdAt": req["created_at"],
-            "updatedAt": req.get("updated_at", req["created_at"]).isoformat() if req.get("updated_at") else req["created_at"].isoformat(),  # Convert to string
+            "admin_notes": req.get("admin_notes"),
+            "created_at": req["created_at"],
+            "updated_at": req.get("updated_at", req["created_at"]).isoformat() if req.get("updated_at") else req["created_at"].isoformat(),  # Convert to string
             "approvedAt": req["approved_at"] if req["approved_at"] else None,
             "approvedBy": req.get("approved_by"),
-            "rejectionReason": req.get("rejection_reason"),
+            "rejection_reason": req.get("rejection_reason"),
             # Additional info
             "userName": req["full_name"],
             "userEmail": req["email"],
             "courseTitle": req["course_title"],
             "paymentAccountName": req.get("payment_type", ""),
-            "paymentAccountType": req.get("payment_type", "")
+            "paymentaccount_type": req.get("payment_type", "")
         })
     
     return response
@@ -144,7 +147,7 @@ async def approve_payment_request(
     result = await db_ops.approve_payment_and_enroll(
         request_id, 
         current_admin["id"], 
-        approval.adminNotes
+        approval.admin_notes
     )
     
     if not result:
@@ -167,7 +170,7 @@ async def reject_payment_request(
     current_admin: dict = Depends(get_current_admin)
 ):
     """Reject a payment request"""
-    if not approval.rejectionReason:
+    if not approval.rejection_reason:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Rejection reason is required"
@@ -176,7 +179,7 @@ async def reject_payment_request(
     success = await db_ops.reject_payment_request(
         request_id, 
         current_admin["id"], 
-        approval.rejectionReason
+        approval.rejection_reason
     )
     
     if not success:
@@ -377,7 +380,7 @@ async def get_course_details_admin(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Course not found"
         )
-    
+    # print(course)
     # Get course enrollments
     enrollments = await db_ops.get_course_enrollments(course_id)
     
@@ -392,34 +395,181 @@ async def get_course_details_admin(
 
 @router.post("/courses")
 async def create_course(
-    course_data: dict,
+    title: str = Form(...),
+    description: str = Form(...),
+    instructor: str = Form(...),
+    price: float = Form(...),
+    duration: str = Form(...),
+    level: str = Form(...),
+    image: Optional[UploadFile] = File(None),
+    outcomes: Optional[str] = Form(None),
+    curriculum: Optional[str] = Form(None),
     current_admin: dict = Depends(get_current_admin)
 ):
     """Create a new course"""
-    course = await db_ops.create_course(course_data)
-    if not course:
+    try:
+        # Keep outcomes and curriculum as JSON strings for database storage
+        outcomes_json = '[]'
+        curriculum_json = '[]'
+        
+        if outcomes:
+            try:
+                # Validate that it's valid JSON, but keep as string
+                json.loads(outcomes)
+                outcomes_json = outcomes
+            except json.JSONDecodeError:
+                outcomes_json = '[]'
+        
+        if curriculum:
+            try:
+                # Validate that it's valid JSON, but keep as string
+                json.loads(curriculum)
+                curriculum_json = curriculum
+            except json.JSONDecodeError:
+                curriculum_json = '[]'
+        
+        # Prepare course data
+        course_data = {
+            "title": title,
+            "description": description,
+            "instructor": instructor,
+            "price": price,
+            "duration": duration,
+            "level": level,
+            "outcomes": outcomes_json,
+            "curriculum": curriculum_json
+        }
+        
+        # Handle image upload if provided
+        if image:
+            # Save the uploaded file
+            import os
+            import uuid
+            from datetime import datetime
+            
+            # Create uploads directory if it doesn't exist
+            upload_dir = "uploads"
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            # Generate unique filename
+            file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
+            unique_filename = f"{uuid.uuid4()}.{file_extension}"
+            file_path = os.path.join(upload_dir, unique_filename)
+            
+            # Save the file
+            with open(file_path, "wb") as buffer:
+                content = await image.read()
+                buffer.write(content)
+            
+            course_data["image"] = f"/uploads/{unique_filename}"
+        
+        course = await db_ops.create_course(course_data)
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create course"
+            )
+        
+        return {"message": "Course created successfully", "course": course}
+        
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create course"
+            detail=f"Failed to create course: {str(e)}"
         )
-    
-    return {"message": "Course created successfully", "course": course}
 
 @router.put("/courses/{course_id}")
 async def update_course(
     course_id: str,
-    course_data: dict,
+    title: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    instructor: Optional[str] = Form(None),
+    price: Optional[float] = Form(None),
+    duration: Optional[str] = Form(None),
+    level: Optional[str] = Form(None),
+    image: Optional[UploadFile] = File(None),
+    outcomes: Optional[str] = Form(None),
+    curriculum: Optional[str] = Form(None),
     current_admin: dict = Depends(get_current_admin)
 ):
     """Update a course"""
-    success = await db_ops.update_course(course_id, course_data)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Course not found"
-        )
+    try:
+        # Keep outcomes and curriculum as JSON strings for database storage
+        outcomes_json = None
+        curriculum_json = None
+        
+        if outcomes:
+            try:
+                # Validate that it's valid JSON, but keep as string
+                json.loads(outcomes)
+                outcomes_json = outcomes
+            except json.JSONDecodeError:
+                outcomes_json = None
+        
+        if curriculum:
+            try:
+                # Validate that it's valid JSON, but keep as string
+                json.loads(curriculum)
+                curriculum_json = curriculum
+            except json.JSONDecodeError:
+                curriculum_json = None
+        
+        # Prepare update data
+        update_data = {}
+        
+        if title is not None:
+            update_data["title"] = title
+        if description is not None:
+            update_data["description"] = description
+        if instructor is not None:
+            update_data["instructor"] = instructor
+        if price is not None:
+            update_data["price"] = price
+        if duration is not None:
+            update_data["duration"] = duration
+        if level is not None:
+            update_data["level"] = level
+        if outcomes_json is not None:
+            update_data["outcomes"] = outcomes_json
+        if curriculum_json is not None:
+            update_data["curriculum"] = curriculum_json
+        
+        # Handle image upload if provided
+        if image:
+            # Save the uploaded file
+            import os
+            import uuid
+            
+            # Create uploads directory if it doesn't exist
+            upload_dir = "uploads"
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            # Generate unique filename
+            file_extension = image.filename.split('.')[-1] if '.' in image.filename else 'jpg'
+            unique_filename = f"{uuid.uuid4()}.{file_extension}"
+            file_path = os.path.join(upload_dir, unique_filename)
+            
+            # Save the file
+            with open(file_path, "wb") as buffer:
+                content = await image.read()
+                buffer.write(content)
+            
+            update_data["image"] = f"/uploads/{unique_filename}"
+        
+        success = await db_ops.update_course(course_id, update_data)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Course not found"
+            )
+        
+        return {"message": "Course updated successfully"}
     
-    return {"message": "Course updated successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update course: {str(e)}"
+        )
 
 @router.delete("/courses/{course_id}")
 async def delete_course(

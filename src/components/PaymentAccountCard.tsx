@@ -52,7 +52,7 @@ const PaymentAccountCard: React.FC<PaymentAccountCardProps> = ({
         {/* Account Number */}
         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
           <span className="text-sm text-gray-600">Account Number</span>
-          <span className="font-mono font-semibold">{account.accountNumber}</span>
+          <span className="font-mono font-semibold">{account.account_number}</span>
         </div>
 
         {/* Bank Name */}

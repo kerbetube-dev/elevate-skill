@@ -50,17 +50,17 @@ async def get_payment_requests(
             "paymentMethodId": req["payment_method_id"],
             "amount": float(req["amount"]),
             "status": req["status"],
-            "adminNotes": req.get("admin_notes"),
-            "createdAt": req["created_at"],
+            "admin_notes": req.get("admin_notes"),
+            "created_at": req["created_at"],
             "approvedAt": req["approved_at"] if req["approved_at"] else None,
             "approvedBy": approved_by,
-            "rejectionReason": req.get("rejection_reason"),
+            "rejection_reason": req.get("rejection_reason"),
             # Additional info
             "userName": req["full_name"],
             "userEmail": req["email"],
             "courseTitle": req["course_title"],
             "paymentType": req["payment_type"],
-            "accountNumber": req["account_number"]
+            "account_number": req["account_number"]
         })
     
     return response

@@ -61,7 +61,23 @@ const UserManagement: React.FC = () => {
       setUsers(response.users);
       setPagination(response.pagination);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch users');
+      // Extract error message from backend response structure
+      let errorMessage = 'Failed to fetch users';
+
+      if (err.response?.data?.detail) {
+        // Handle nested error structure: {"detail": {"message": "error message"}}
+        if (typeof err.response.data.detail === 'object' && err.response.data.detail.message) {
+          errorMessage = err.response.data.detail.message;
+        } else if (typeof err.response.data.detail === 'string') {
+          errorMessage = err.response.data.detail;
+        }
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -106,9 +122,25 @@ const UserManagement: React.FC = () => {
       
       fetchUsers(); // Refresh the list
     } catch (err: any) {
+      // Extract error message from backend response structure
+      let errorMessage = 'Failed to update user status';
+
+      if (err.response?.data?.detail) {
+        // Handle nested error structure: {"detail": {"message": "error message"}}
+        if (typeof err.response.data.detail === 'object' && err.response.data.detail.message) {
+          errorMessage = err.response.data.detail.message;
+        } else if (typeof err.response.data.detail === 'string') {
+          errorMessage = err.response.data.detail;
+        }
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
       toast({
         title: "Error",
-        description: err.response?.data?.detail || 'Failed to update user status',
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -248,7 +280,7 @@ const UserManagement: React.FC = () => {
                         <TableCell>
                           <div className="flex items-center text-sm text-gray-500">
                             <Calendar className="w-4 h-4 mr-2" />
-                            {formatDate(user.createdAt)}
+                            {formatDate(user.created_at)}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -294,7 +326,7 @@ const UserManagement: React.FC = () => {
                                           <div><strong>Email:</strong> {userDetails.user.email}</div>
                                           <div><strong>Referral Code:</strong> {userDetails.user.referralCode}</div>
                                           <div><strong>Status:</strong> {getStatusBadge(userDetails.user.isActive ?? true)}</div>
-                                          <div><strong>Joined:</strong> {formatDate(userDetails.user.createdAt)}</div>
+                                          <div><strong>Joined:</strong> {formatDate(userDetails.user.created_at)}</div>
                                           <div><strong>Total Earnings:</strong> {userDetails.user.totalEarnings || 0} ETB</div>
                                         </CardContent>
                                       </Card>

@@ -8,23 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, async_sessionmaker, AsyncSession
 
 
-# Load environment variables from nearest .env up the tree
-try:
-    # 1) Load nearest .env in tree
-    env_path = find_dotenv()
-    if env_path:
-        load_dotenv(env_path)
-    # 2) Also try project root .env explicitly
-    project_root = Path(__file__).resolve().parents[2]
-    explicit_env = project_root / ".env"
-    if explicit_env.exists():
-        load_dotenv(explicit_env)
-    # 3) And backend/.env if present
-    backend_env = Path(__file__).resolve().parents[1] / ".env"
-    if backend_env.exists():
-        load_dotenv(backend_env)
-except Exception:
-    pass
+load_dotenv()
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -95,6 +79,7 @@ if SUPABASE_URL and SUPABASE_KEY:
 
 
 async def connect_db():
+    
     """Validate DB connectivity (no persistent connection needed)."""
     if not async_engine:
         print("❌ Database connection not configured")
@@ -116,17 +101,10 @@ async def disconnect_db():
 
 def get_async_session() -> AsyncSession:
     if not async_session_factory:
-        raise RuntimeError("Database not configured")
+        print("⚠️  Database not configured, using in-memory fallback")
+        # For development, we'll use a mock session that doesn't actually connect
+        # In production, this should raise an error
+        raise RuntimeError("Database not configured. Please set DATABASE_URL environment variable.")
     return async_session_factory()
 
 
-async def test_connection() -> bool:
-    try:
-        if not async_engine:
-            return False
-        async with async_engine.connect() as conn:
-            await conn.execute(text("SELECT 1"))
-        return True
-    except Exception as e:
-        print(f"Database connection test failed: {e}")
-        return False

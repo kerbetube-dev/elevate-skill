@@ -9,6 +9,10 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  define: {
+    // Define environment variables for the build
+    'import.meta.env.VITE_API_BASE_URL': JSON.stringify('http://localhost:8000'),
+  },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {

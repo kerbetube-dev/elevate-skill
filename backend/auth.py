@@ -64,7 +64,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
                 "fullName": admin["full_name"],
                 "role": admin["role"],
                 "referralCode": "ADMIN",
-                "createdAt": admin["created_at"].isoformat()
+                "created_at": admin["created_at"].isoformat()
             }
     
     # Regular user
@@ -96,6 +96,6 @@ def create_user_response(user: dict) -> dict:
         "fullName": user["full_name"],
         "email": user["email"],
         "referralCode": user["referral_code"],
-        "createdAt": user["created_at"].isoformat() if user.get("created_at") else None,
+        "created_at": user["created_at"].isoformat() if user.get("created_at") else None,
         "role": user.get("role", "student")
     }

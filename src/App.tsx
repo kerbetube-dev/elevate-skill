@@ -13,6 +13,8 @@ import EnhancedRegisterForm from "./components/EnhancedRegisterForm";
 import EnhancedDashboard from "./components/EnhancedDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import UserCourseDetail from "./pages/UserCourseDetail";
+import AdminCourseDetail from "./pages/AdminCourseDetail";
 import PaymentPage from "./pages/PaymentPage";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +33,7 @@ const App = () => (
             <Route path="/login" element={<EnhancedLoginForm />} />
             <Route path="/dashboard" element={<EnhancedDashboard />} />
             <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/course/:courseId" element={<UserCourseDetail />} />
             
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
@@ -40,6 +43,8 @@ const App = () => (
             <Route path="/admin/payment-accounts" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminDashboard />} />
             <Route path="/admin/courses" element={<AdminDashboard />} />
+            <Route path="/admin/courses/:courseId" element={<AdminCourseDetail />} />
+            <Route path="/admin/withdrawals" element={<AdminDashboard />} />
             <Route path="/admin/analytics" element={<AdminDashboard />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -5,7 +5,7 @@
 
 import api from './api';
 
-const API_BASE_URL = 'http://localhost:8004';
+const API_BASE_URL = 'http://localhost:8000';
 
 // ===================================
 // Types
@@ -15,14 +15,14 @@ export interface PaymentAccount {
   id: string;
   type: string;
   accountName: string;
-  accountNumber: string;
+  account_number: string;
   bankName?: string;
   instructions?: string;
   qrCodeUrl?: string;
   isActive: boolean;
   displayOrder: number;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PaymentRequest {
@@ -34,18 +34,18 @@ export interface PaymentRequest {
   transactionScreenshotUrl: string;
   transactionReference?: string;
   status: 'pending' | 'approved' | 'rejected';
-  adminNotes?: string;
-  rejectionReason?: string;
+  admin_notes?: string;
+  rejection_reason?: string;
   approvedBy?: string;
   approvedAt?: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
   // Additional info
   userName?: string;
   userEmail?: string;
   courseTitle?: string;
   paymentAccountName?: string;
-  paymentAccountType?: string;
+  paymentaccount_type?: string;
 }
 
 export interface Enrollment {

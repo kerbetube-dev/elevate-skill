@@ -33,7 +33,7 @@ class InMemoryDatabase:
                 "rating": 4.8,
                 "level": "Beginner to Intermediate",
                 "instructor": "Sarah Johnson",
-                "createdAt": datetime.utcnow().isoformat()
+                "created_at": datetime.utcnow().isoformat()
             },
             "2": {
                 "id": "2",
@@ -46,7 +46,7 @@ class InMemoryDatabase:
                 "rating": 4.9,
                 "level": "Beginner to Intermediate",
                 "instructor": "Mike Chen",
-                "createdAt": datetime.utcnow().isoformat()
+                "created_at": datetime.utcnow().isoformat()
             },
             "3": {
                 "id": "3",
@@ -59,7 +59,7 @@ class InMemoryDatabase:
                 "rating": 4.7,
                 "level": "Intermediate to Advanced",
                 "instructor": "Alex Rodriguez",
-                "createdAt": datetime.utcnow().isoformat()
+                "created_at": datetime.utcnow().isoformat()
             },
             "4": {
                 "id": "4",
@@ -72,7 +72,7 @@ class InMemoryDatabase:
                 "rating": 4.6,
                 "level": "All Levels",
                 "instructor": "Emma Thompson",
-                "createdAt": datetime.utcnow().isoformat()
+                "created_at": datetime.utcnow().isoformat()
             },
             "5": {
                 "id": "5",
@@ -85,7 +85,7 @@ class InMemoryDatabase:
                 "rating": 4.9,
                 "level": "Intermediate to Advanced",
                 "instructor": "David Kim",
-                "createdAt": datetime.utcnow().isoformat()
+                "created_at": datetime.utcnow().isoformat()
             },
             "6": {
                 "id": "6",
@@ -98,7 +98,7 @@ class InMemoryDatabase:
                 "rating": 4.8,
                 "level": "Advanced",
                 "instructor": "Lisa Wang",
-                "createdAt": datetime.utcnow().isoformat()
+                "created_at": datetime.utcnow().isoformat()
             }
         }
         self.courses = sample_courses
@@ -115,7 +115,7 @@ class InMemoryDatabase:
             "password": user_data["password"],
             "referralCode": referral_code,
             "referredBy": user_data.get("referralCode"),
-            "createdAt": datetime.utcnow().isoformat(),
+            "created_at": datetime.utcnow().isoformat(),
             "role": "student",
             "totalEarnings": 0
         }
@@ -145,7 +145,7 @@ class InMemoryDatabase:
             "id": course_id,
             "students": 0,
             "rating": 0.0,
-            "createdAt": datetime.utcnow().isoformat(),
+            "created_at": datetime.utcnow().isoformat(),
             **course_data
         }
         self.courses[course_id] = course
@@ -198,7 +198,7 @@ class InMemoryDatabase:
         method = {
             "id": method_id,
             "isDefault": len(self.payment_methods.get(user_email, [])) == 0,
-            "createdAt": datetime.utcnow().isoformat(),
+            "created_at": datetime.utcnow().isoformat(),
             **method_data
         }
 

@@ -60,7 +60,7 @@ const PaymentAccountManagement: React.FC = () => {
   const [formData, setFormData] = useState<CreatePaymentAccountData>({
     type: '',
     accountName: '',
-    accountNumber: '',
+    account_number: '',
     bankName: '',
     instructions: '',
     qrCodeUrl: '',
@@ -108,7 +108,7 @@ const PaymentAccountManagement: React.FC = () => {
       setFormData({
         type: account.type,
         accountName: account.accountName,
-        accountNumber: account.accountNumber,
+        account_number: account.account_number,
         bankName: account.bankName || '',
         instructions: account.instructions || '',
         qrCodeUrl: account.qrCodeUrl || '',
@@ -120,7 +120,7 @@ const PaymentAccountManagement: React.FC = () => {
       setFormData({
         type: '',
         accountName: '',
-        accountNumber: '',
+        account_number: '',
         bankName: '',
         instructions: '',
         qrCodeUrl: '',
@@ -137,7 +137,7 @@ const PaymentAccountManagement: React.FC = () => {
     setFormData({
       type: '',
       accountName: '',
-      accountNumber: '',
+      account_number: '',
       bankName: '',
       instructions: '',
       qrCodeUrl: '',
@@ -148,7 +148,7 @@ const PaymentAccountManagement: React.FC = () => {
 
   const handleSubmit = async () => {
     // Validation
-    if (!formData.type || !formData.accountName || !formData.accountNumber) {
+    if (!formData.type || !formData.accountName || !formData.account_number) {
       toast({
         title: 'Validation Error',
         description: 'Please fill in all required fields',
@@ -295,7 +295,7 @@ const PaymentAccountManagement: React.FC = () => {
               <CardContent className="space-y-3">
                 <div className="p-3 bg-gray-50 rounded-md">
                   <div className="text-xs text-gray-500 mb-1">Account Number</div>
-                  <div className="font-mono font-semibold">{account.accountNumber}</div>
+                  <div className="font-mono font-semibold">{account.account_number}</div>
                 </div>
 
                 {account.bankName && (
@@ -392,11 +392,11 @@ const PaymentAccountManagement: React.FC = () => {
 
             {/* Account Number */}
             <div>
-              <Label htmlFor="accountNumber">Account Number *</Label>
+              <Label htmlFor="account_number">Account Number *</Label>
               <Input
-                id="accountNumber"
-                value={formData.accountNumber}
-                onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
+                id="account_number"
+                value={formData.account_number}
+                onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
                 placeholder="e.g., 1000123456789 or 0911234567"
               />
             </div>

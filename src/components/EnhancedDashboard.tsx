@@ -40,6 +40,7 @@ import { dashboardService } from "@/services/dashboard";
 import { authService } from "@/services/auth";
 import { paymentService, Enrollment, PaymentRequest } from "@/services/payments";
 import elevateSkillLogo from "@/assets/elevate-skill-logo.png";
+import { getImageUrl } from "@/services/admin";
 
 const EnhancedDashboard = () => {
   const [activeTab, setActiveTab] = useState("home");
@@ -139,9 +140,8 @@ const EnhancedDashboard = () => {
   if (loading) {
     return (
       <LoadingPage 
-        loading={true} 
-        loadingText="Loading your dashboard..."
-      />
+        loading={true}
+        loadingText="Loading your dashboard..." children={""}      />
     );
   }
 
@@ -256,7 +256,7 @@ const EnhancedDashboard = () => {
               <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <BookOpen className="w-5 h-5 text-blue-600" />
                 <div className="flex-1">
-                  <div className="font-medium">{course.title}</div>
+                  <div className="font-medium">{course.courseTitle}</div>
                   <div className="text-sm text-gray-600">Enrolled</div>
                 </div>
                 <Badge variant="secondary">Active</Badge>
@@ -285,9 +285,25 @@ const EnhancedDashboard = () => {
       <LoadingCard loading={refreshing} loadingText="Refreshing courses...">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course) => (
-            <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="aspect-video bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <BookOpen className="w-12 h-12 text-white" />
+            <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/course/${course.id}`)}>
+              <div className="aspect-video relative">
+                {course.image ? (
+                  <img 
+                    src={getImageUrl(course.image)} 
+                    alt={course.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center ${course.image ? 'hidden' : ''}`}>
+                  <div className="text-center text-white">
+                    <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-80" />
+                    <p className="text-sm opacity-90">Course Preview</p>
+                  </div>
+                </div>
               </div>
               <CardContent className="p-4">
                 <CardTitle className="text-lg mb-2">{course.title}</CardTitle>
@@ -297,10 +313,13 @@ const EnhancedDashboard = () => {
                   <span className="font-bold text-lg">${course.price}</span>
                 </div>
                 <Button 
-                  onClick={() => handleEnrollCourse(course.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/course/${course.id}`);
+                  }}
                   className="w-full"
                 >
-                  Enroll Now
+                  View Details
                 </Button>
               </CardContent>
             </Card>
@@ -314,7 +333,9 @@ const EnhancedDashboard = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">My Courses</h2>
-        <RefreshButton onRefresh={() => fetchDashboardData(true)} isRefreshing={refreshing} />
+        <RefreshButton onRefresh={() => fetchDashboardData(true)} refreshing={refreshing}>
+          Refresh
+        </RefreshButton>
       </div>
       
       {/* Enrolled Courses */}
@@ -405,7 +426,7 @@ const EnhancedDashboard = () => {
                         </div>
                         <div className="text-sm text-gray-600 space-y-1">
                           <div>Amount: <span className="font-semibold">{paymentService.formatAmount(payment.amount)}</span></div>
-                          <div>Submitted: {new Date(payment.createdAt).toLocaleDateString()}</div>
+                          <div>Submitted: {new Date(payment.created_at).toLocaleDateString()}</div>
                           {payment.transactionReference && (
                             <div>Reference: <span className="font-mono text-xs">{payment.transactionReference}</span></div>
                           )}
@@ -418,8 +439,8 @@ const EnhancedDashboard = () => {
                         {payment.status === 'pending' && (
                           <div className="text-xs text-gray-500 mt-2">Under Review</div>
                         )}
-                        {payment.status === 'rejected' && payment.rejectionReason && (
-                          <div className="text-xs text-red-600 mt-2 max-w-xs">{payment.rejectionReason}</div>
+                        {payment.status === 'rejected' && payment.rejection_reason && (
+                          <div className="text-xs text-red-600 mt-2 max-w-xs">{payment.rejection_reason}</div>
                         )}
                         {payment.status === 'approved' && (
                           <div className="text-xs text-green-600 mt-2">Approved!</div>
@@ -464,7 +485,7 @@ const EnhancedDashboard = () => {
 
   // Keep the old empty state
   const renderOldEmptyState = () => (
-    <LoadingCard>
+    <LoadingCard loading={false}>
       <div className="text-center py-12">
         <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">No Enrolled Courses</h3>

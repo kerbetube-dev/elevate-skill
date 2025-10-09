@@ -20,10 +20,10 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<WithdrawalRequest>({
     amount: 300,
-    accountType: 'CBE',
-    accountNumber: '',
-    accountHolderName: '',
-    phoneNumber: ''
+    account_type: 'CBE',
+    account_number: '',
+    account_holder_name: '',
+    phone_number: ''
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -40,16 +40,16 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
       newErrors.amount = `Insufficient earnings. Available: ${userEarnings} ETB`;
     }
 
-    if (!formData.accountNumber.trim()) {
-      newErrors.accountNumber = 'Account number is required';
+    if (!formData.account_number.trim()) {
+      newErrors.account_number = 'Account number is required';
     }
 
-    if (!formData.accountHolderName.trim()) {
-      newErrors.accountHolderName = 'Account holder name is required';
+    if (!formData.account_holder_name.trim()) {
+      newErrors.account_holder_name = 'Account holder name is required';
     }
 
-    if (formData.accountType === 'TeleBirr' && !formData.phoneNumber?.trim()) {
-      newErrors.phoneNumber = 'Phone number is required for TeleBirr';
+    if (formData.account_type === 'TeleBirr' && !formData.phone_number?.trim()) {
+      newErrors.phone_number = 'Phone number is required for TeleBirr';
     }
 
     setErrors(newErrors);
@@ -76,10 +76,10 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
       // Reset form
       setFormData({
         amount: 300,
-        accountType: 'CBE',
-        accountNumber: '',
-        accountHolderName: '',
-        phoneNumber: ''
+        account_type: 'CBE',
+        account_number: '',
+        account_holder_name: '',
+        phone_number: ''
       });
       setErrors({});
 
@@ -147,10 +147,10 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
 
           {/* Account Type */}
           <div className="space-y-2">
-            <Label htmlFor="accountType">Account Type</Label>
+            <Label htmlFor="account_type">Account Type</Label>
             <Select 
-              value={formData.accountType} 
-              onValueChange={(value) => handleInputChange('accountType', value as 'CBE' | 'TeleBirr')}
+              value={formData.account_type} 
+              onValueChange={(value) => handleInputChange('account_type', value as 'CBE' | 'TeleBirr')}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select account type" />
@@ -174,52 +174,52 @@ const WithdrawalRequestForm: React.FC<WithdrawalRequestFormProps> = ({
 
           {/* Account Number */}
           <div className="space-y-2">
-            <Label htmlFor="accountNumber">
-              {formData.accountType === 'CBE' ? 'Account Number' : 'TeleBirr Account Number'}
+            <Label htmlFor="account_number">
+              {formData.account_type === 'CBE' ? 'Account Number' : 'TeleBirr Account Number'}
             </Label>
             <Input
-              id="accountNumber"
+              id="account_number"
               type="text"
-              value={formData.accountNumber}
-              onChange={(e) => handleInputChange('accountNumber', e.target.value)}
-              className={errors.accountNumber ? 'border-red-500' : ''}
-              placeholder={formData.accountType === 'CBE' ? 'Enter CBE account number' : 'Enter TeleBirr account number'}
+              value={formData.account_number}
+              onChange={(e) => handleInputChange('account_number', e.target.value)}
+              className={errors.account_number ? 'border-red-500' : ''}
+              placeholder={formData.account_type === 'CBE' ? 'Enter CBE account number' : 'Enter TeleBirr account number'}
             />
-            {errors.accountNumber && (
-              <p className="text-sm text-red-500">{errors.accountNumber}</p>
+            {errors.account_number && (
+              <p className="text-sm text-red-500">{errors.account_number}</p>
             )}
           </div>
 
           {/* Account Holder Name */}
           <div className="space-y-2">
-            <Label htmlFor="accountHolderName">Account Holder Name</Label>
+            <Label htmlFor="account_holder_name">Account Holder Name</Label>
             <Input
-              id="accountHolderName"
+              id="account_holder_name"
               type="text"
-              value={formData.accountHolderName}
-              onChange={(e) => handleInputChange('accountHolderName', e.target.value)}
-              className={errors.accountHolderName ? 'border-red-500' : ''}
+              value={formData.account_holder_name}
+              onChange={(e) => handleInputChange('account_holder_name', e.target.value)}
+              className={errors.account_holder_name ? 'border-red-500' : ''}
               placeholder="Enter account holder's full name"
             />
-            {errors.accountHolderName && (
-              <p className="text-sm text-red-500">{errors.accountHolderName}</p>
+            {errors.account_holder_name && (
+              <p className="text-sm text-red-500">{errors.account_holder_name}</p>
             )}
           </div>
 
           {/* Phone Number (for TeleBirr) */}
-          {formData.accountType === 'TeleBirr' && (
+          {formData.account_type === 'TeleBirr' && (
             <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Label htmlFor="phone_number">Phone Number</Label>
               <Input
-                id="phoneNumber"
+                id="phone_number"
                 type="tel"
-                value={formData.phoneNumber}
-                onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                className={errors.phoneNumber ? 'border-red-500' : ''}
+                value={formData.phone_number}
+                onChange={(e) => handleInputChange('phone_number', e.target.value)}
+                className={errors.phone_number ? 'border-red-500' : ''}
                 placeholder="Enter phone number (e.g., 0912345678)"
               />
-              {errors.phoneNumber && (
-                <p className="text-sm text-red-500">{errors.phoneNumber}</p>
+              {errors.phone_number && (
+                <p className="text-sm text-red-500">{errors.phone_number}</p>
               )}
             </div>
           )}

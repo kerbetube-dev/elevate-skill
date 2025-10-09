@@ -44,33 +44,28 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Security middleware (order matters - first added is outermost)
-app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(InputValidationMiddleware)
-app.add_middleware(RateLimitMiddleware)
-
-# CORS middleware
+# CORS middleware (should be first for proper preflight handling)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:8080",
-        "http://localhost:8082",
-        "http://localhost:8083",
-        "http://localhost:3000",
+        "http://localhost:8080",  # Frontend development server
         "http://127.0.0.1:8080",
-        "http://127.0.0.1:8082",
-        "http://127.0.0.1:8083",
+        "http://localhost:3000",  # Alternative frontend port
         "http://127.0.0.1:3000",
-        "http://10.240.41.148:8080",
-        "http://172.19.0.1:8080"
+        "*"  # Allow all origins for development (remove in production)
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# Register error handlers
-register_error_handlers(app)
+# Security middleware (order matters - first added is outermost)
+# app.add_middleware(SecurityHeadersMiddleware)
+# app.add_middleware(InputValidationMiddleware)
+# app.add_middleware(RateLimitMiddleware)
+
+# # Register error handlers
+# register_error_handlers(app)
 
 # Include routers
 app.include_router(auth_router)

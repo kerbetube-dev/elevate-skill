@@ -22,7 +22,24 @@ COURSES_DATA = [
         "students": 1250,
         "rating": 4.8,
         "level": "Beginner to Intermediate",
-        "instructor": "Sarah Johnson"
+        "instructor": "Sarah Johnson",
+        "outcomes": [
+            "Master social media marketing strategies",
+            "Understand SEO fundamentals and implementation",
+            "Create effective PPC campaigns",
+            "Develop content marketing strategies",
+            "Analyze marketing metrics and ROI"
+        ],
+        "curriculum": [
+            "Week 1: Introduction to Digital Marketing",
+            "Week 2: Social Media Marketing",
+            "Week 3: Search Engine Optimization (SEO)",
+            "Week 4: Pay-Per-Click (PPC) Advertising",
+            "Week 5: Content Marketing",
+            "Week 6: Email Marketing",
+            "Week 7: Analytics and Metrics",
+            "Week 8: Final Project and Portfolio"
+        ]
     },
     {
         "title": "Graphics Design",
@@ -33,7 +50,26 @@ COURSES_DATA = [
         "students": 890,
         "rating": 4.9,
         "level": "Beginner to Intermediate",
-        "instructor": "Mike Chen"
+        "instructor": "Mike Chen",
+        "outcomes": [
+            "Master Adobe Creative Suite tools",
+            "Understand design principles and color theory",
+            "Create professional branding materials",
+            "Develop typography skills",
+            "Build a design portfolio"
+        ],
+        "curriculum": [
+            "Week 1: Introduction to Graphic Design",
+            "Week 2: Adobe Photoshop Basics",
+            "Week 3: Adobe Illustrator Fundamentals",
+            "Week 4: Typography and Layout",
+            "Week 5: Color Theory and Application",
+            "Week 6: Branding and Identity Design",
+            "Week 7: Print Design Principles",
+            "Week 8: Digital Design and Web Graphics",
+            "Week 9: Portfolio Development",
+            "Week 10: Final Project Presentation"
+        ]
     },
     {
         "title": "Video Editing",
@@ -123,8 +159,8 @@ async def seed_courses():
     for course_data in COURSES_DATA:
         course_id = str(uuid.uuid4())
         query = """
-        INSERT INTO courses (id, title, description, image, price, duration, students, rating, level, instructor, created_at)
-        VALUES (:id, :title, :description, :image, :price, :duration, :students, :rating, :level, :instructor, :created_at)
+        INSERT INTO courses (id, title, description, image, price, duration, students, rating, level, instructor, outcomes, curriculum, created_at)
+        VALUES (:id, :title, :description, :image, :price, :duration, :students, :rating, :level, :instructor, :outcomes, :curriculum, :created_at)
         """
         
         values = {
@@ -138,6 +174,8 @@ async def seed_courses():
             "rating": course_data["rating"],
             "level": course_data["level"],
             "instructor": course_data["instructor"],
+            "outcomes": course_data.get("outcomes"),
+            "curriculum": course_data.get("curriculum"),
             "created_at": datetime.utcnow()
         }
         

@@ -31,10 +31,10 @@ async def test_withdrawal_creation():
     
     withdrawal_data = {
         "amount": 300,
-        "accountType": "CBE",
-        "accountNumber": "1000123456789",
-        "accountHolderName": "Test Withdrawal User",
-        "phoneNumber": "0912345678"
+        "account_type": "CBE",
+        "account_number": "1000123456789",
+        "account_holder_name": "Test Withdrawal User",
+        "phone_number": "0912345678"
     }
     
     try:

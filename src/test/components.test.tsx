@@ -105,7 +105,7 @@ const mockUser = {
   id: 'user-1',
   fullName: 'Test User',
   email: 'test@example.com',
-  createdAt: '2024-01-01T00:00:00Z',
+  created_at: '2024-01-01T00:00:00Z',
 };
 
 const mockEnrollments = [

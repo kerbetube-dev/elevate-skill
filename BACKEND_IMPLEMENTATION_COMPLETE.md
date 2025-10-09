@@ -166,7 +166,7 @@ curl -X POST http://localhost:8004/payment-accounts/ \
   -d '{
     "type": "CBE",
     "accountName": "ElevateSkill Academy",
-    "accountNumber": "1000123456789",
+    "account_number": "1000123456789",
     "bankName": "Commercial Bank of Ethiopia",
     "instructions": "Transfer to this account and upload receipt",
     "isActive": true,
@@ -205,7 +205,7 @@ curl -X POST http://localhost:8004/payments/requests/{request_id}/approve \
   -H "Authorization: Bearer {admin_token}" \
   -d '{
     "status": "approved",
-    "adminNotes": "Payment verified and approved"
+    "admin_notes": "Payment verified and approved"
   }'
 ```
 

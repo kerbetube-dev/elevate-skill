@@ -32,8 +32,11 @@ class DashboardService {
   async getDashboardStats(): Promise<DashboardStats> {
     try {
       const response = await api.get<DashboardStats>('/dashboard/stats');
+      console.log("Dashboard stats response:");
+      console.log(response.data);
       return response.data;
     } catch (error) {
+      console.error("Error getting dashboard stats:", error);
       throw new Error(handleApiError(error));
     }
   }
@@ -42,8 +45,11 @@ class DashboardService {
   async getRecentActivity(): Promise<RecentActivity[]> {
     try {
       const response = await api.get<RecentActivity[]>('/dashboard/recent-activity');
+      console.log("Recent activity response:");
+      console.log(response.data);
       return response.data;
     } catch (error) {
+      console.error("Error getting recent activity:", error);
       throw new Error(handleApiError(error));
     }
   }

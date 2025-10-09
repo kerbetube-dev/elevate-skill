@@ -1,6 +1,17 @@
 import axios from 'axios';
+import { handleApiError } from './api';
 
-const API_BASE_URL = 'http://localhost:8004';
+// API Configuration
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+// Utility function to get full image URL
+export const getImageUrl = (imagePath: string) => {
+  if (!imagePath) return null;
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) return imagePath;
+  // Otherwise, prepend the API base URL
+  return `${API_BASE_URL}${imagePath}`;
+};
 
 // Create axios instance for admin API calls
 const adminApi = axios.create({
@@ -47,7 +58,7 @@ export interface AdminLoginResponse {
     fullName: string;
     role: string;
     referralCode: string;
-    createdAt: string;
+    created_at: string;
   };
 }
 
@@ -60,23 +71,23 @@ export interface PaymentRequest {
   transactionScreenshotUrl?: string;
   transactionReference?: string;
   status: 'pending' | 'approved' | 'rejected';
-  adminNotes?: string;
-  createdAt: string;
-  updatedAt: string;
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
   approvedAt?: string;
   approvedBy?: string;
-  rejectionReason?: string;
+  rejection_reason?: string;
   userName: string;
   userEmail: string;
   courseTitle: string;
   paymentAccountName?: string;
-  paymentAccountType?: string;
+  paymentaccount_type?: string;
 }
 
 export interface PaymentApprovalRequest {
   status: 'approved' | 'rejected';
-  adminNotes?: string;
-  rejectionReason?: string;
+  admin_notes?: string;
+  rejection_reason?: string;
 }
 
 export interface AdminStats {
@@ -95,7 +106,7 @@ export interface User {
   fullName: string;
   role: string;
   referralCode: string;
-  createdAt: string;
+  created_at: string;
   isActive?: boolean;
   totalEarnings?: number;
 }
@@ -118,6 +129,7 @@ export interface UsersResponse {
 }
 
 export interface Course {
+  isActive: any;
   id: string;
   title: string;
   description: string;
@@ -128,8 +140,10 @@ export interface Course {
   students: number;
   rating: number;
   image: string;
-  createdAt: string;
-  updatedAt: string;
+  outcomes?: string[];
+  curriculum?: string[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CourseDetails {
@@ -153,20 +167,27 @@ export interface CoursesResponse {
   };
 }
 
-export interface CourseCreateData {
+export interface Coursecreated_ata {
   title: string;
   description: string;
   instructor: string;
   price: number;
   duration: string;
   level: string;
+  image?: string;
+  outcomes?: string[];
+  curriculum?: string[];
 }
 
 export const adminService = {
   // Admin authentication
   async login(credentials: AdminLoginRequest): Promise<AdminLoginResponse> {
-    const response = await axios.post(`${API_BASE_URL}/admin/login`, credentials);
-    return response.data;
+    try {
+      const response = await axios.post(`${API_BASE_URL}/admin/login`, credentials);
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
   },
 
   // Get admin profile
@@ -247,13 +268,21 @@ export const adminService = {
     return response.data;
   },
 
-  async createCourse(courseData: CourseCreateData): Promise<Course> {
-    const response = await adminApi.post('/courses', courseData);
+  async createCourse(courseData: Coursecreated_ata | FormData): Promise<Course> {
+    const response = await adminApi.post('/courses', courseData, {
+      headers: {
+        'Content-Type': courseData instanceof FormData ? 'multipart/form-data' : 'application/json'
+      }
+    });
     return response.data.course;
   },
 
-  async updateCourse(courseId: string, courseData: Partial<CourseCreateData>): Promise<void> {
-    await adminApi.put(`/courses/${courseId}`, courseData);
+  async updateCourse(courseId: string, courseData: Partial<Coursecreated_ata> | FormData): Promise<void> {
+    await adminApi.put(`/courses/${courseId}`, courseData, {
+      headers: {
+        'Content-Type': courseData instanceof FormData ? 'multipart/form-data' : 'application/json'
+      }
+    });
   },
 
   async deleteCourse(courseId: string): Promise<void> {

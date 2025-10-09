@@ -48,7 +48,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     const id = Math.random().toString(36).substr(2, 9);
     const newToast: Toast = {
       id,
-      duration: 5000, // Default 5 seconds
+      duration: 10000, // Default 5 seconds
       ...toast,
     };
 
@@ -85,7 +85,8 @@ interface ToastContainerProps {
 
 const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onRemove }) => {
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    // increase width
+    <div className="fixed top-4 right-4 z-50 space-y-2 w-full">
       {toasts.map(toast => (
         <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
       ))}

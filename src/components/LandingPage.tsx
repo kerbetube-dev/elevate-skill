@@ -15,6 +15,7 @@ import videoEditingImg from "@/assets/video-editing.jpg";
 import englishCommunicationImg from "@/assets/english-communication.jpg";
 import webDevelopmentImg from "@/assets/web-development.jpg";
 import appDevelopmentImg from "@/assets/app-development.jpg";
+import { getImageUrl } from "@/services/admin";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -270,13 +271,25 @@ const LandingPage = () => {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {courses.map((course) => (
-              <Card key={course.id} className="overflow-hidden border-0 shadow-elegant hover:shadow-glow transition-all duration-500 group">
+              <Card key={course.id} className="overflow-hidden border-0 shadow-elegant hover:shadow-glow transition-all duration-500 group cursor-pointer" onClick={() => navigate(`/course/${course.id}`)}>
                 <div className="relative overflow-hidden">
-                  <img 
-                    src={course.image || digitalMarketingImg} 
-                    alt={course.title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {course.image ? (
+                    <img 
+                      src={getImageUrl(course.image)} 
+                      alt={course.title}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`w-full h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center ${course.image ? 'hidden' : ''}`}>
+                    <div className="text-center text-white">
+                      <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-80" />
+                      <p className="text-sm opacity-90">Course Preview</p>
+                    </div>
+                  </div>
                   <div className="absolute top-4 left-4">
                     <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm">
                       {course.level}
@@ -307,7 +320,10 @@ const LandingPage = () => {
                     <Button 
                       variant="outline" 
                       className="w-full border-green-500 text-green-600 hover:bg-green-50"
-                      onClick={() => navigate('/dashboard')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/dashboard');
+                      }}
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
                       Enrolled - Go to Dashboard
@@ -316,17 +332,13 @@ const LandingPage = () => {
                     <Button 
                       variant="hero" 
                       className="w-full"
-                      onClick={() => handleEnrollClick(course)}
-                      disabled={checkingEnrollment === course.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/course/${course.id}`);
+                      }}
                     >
-                      {checkingEnrollment === course.id ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Checking...
-                        </>
-                      ) : (
-                        'Enroll Now'
-                      )}
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      View Details
                     </Button>
                   )}
                 </CardContent>

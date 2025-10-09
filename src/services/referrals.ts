@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8004';
+const API_BASE_URL = 'http://localhost:8000';
 
 // Create axios instance for referral API calls
 const referralApi = axios.create({
@@ -57,7 +57,7 @@ export interface ReferralEarning {
   referredUserId: string;
   amount: number;
   status: 'pending' | 'completed';
-  createdAt: string;
+  created_at: string;
   completedAt?: string;
   referredUserName: string;
   referredUserEmail: string;

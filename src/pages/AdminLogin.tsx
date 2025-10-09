@@ -32,7 +32,23 @@ const AdminLogin: React.FC = () => {
       });
       navigate('/admin/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed. Please try again.');
+      // Extract error message from backend response structure
+      let errorMessage = 'Login failed. Please try again.';
+
+      if (err.response?.data?.detail) {
+        // Handle nested error structure: {"detail": {"message": "error message"}}
+        if (typeof err.response.data.detail === 'object' && err.response.data.detail.message) {
+          errorMessage = err.response.data.detail.message;
+        } else if (typeof err.response.data.detail === 'string') {
+          errorMessage = err.response.data.detail;
+        }
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

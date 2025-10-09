@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, DollarSign, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { Loader2, DollarSign, Clock, CheckCircle, XCircle, RefreshCw, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { withdrawalsService, WithdrawalResponse } from '@/services/withdrawals';
 
@@ -15,6 +15,7 @@ export const WithdrawalHistory: React.FC<WithdrawalHistoryProps> = ({ onRefresh 
   const [withdrawals, setWithdrawals] = useState<WithdrawalResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5);
   const { toast } = useToast();
 
   const fetchWithdrawals = async () => {
@@ -40,8 +41,16 @@ export const WithdrawalHistory: React.FC<WithdrawalHistoryProps> = ({ onRefresh 
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchWithdrawals();
+    setVisibleCount(5); // Reset to show only top 5 after refresh
     onRefresh?.();
   };
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => Math.min(prev + 5, withdrawals.length));
+  };
+
+  const visibleWithdrawals = withdrawals.slice(0, visibleCount);
+  const hasMore = visibleCount < withdrawals.length;
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -135,8 +144,8 @@ export const WithdrawalHistory: React.FC<WithdrawalHistoryProps> = ({ onRefresh 
           </Alert>
         ) : (
           <div className="space-y-4">
-            {withdrawals.map((withdrawal) => (
-              <Card key={withdrawal.id} className="border-l-4 border-l-blue-500">
+            {visibleWithdrawals.map((withdrawal) => (
+              <Card key={withdrawal.id} className="shadow-md hover:shadow-lg transition-shadow duration-200 border-0 bg-white">
                 <CardContent className="pt-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -151,50 +160,73 @@ export const WithdrawalHistory: React.FC<WithdrawalHistoryProps> = ({ onRefresh 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-gray-600">
-                        <strong>Account Type:</strong> {withdrawal.accountType}
+                        <strong>Account Type:</strong> {withdrawal.account_type}
                       </p>
                       <p className="text-gray-600">
-                        <strong>Account Number:</strong> {withdrawal.accountNumber}
+                        <strong>Account Number:</strong> {withdrawal.account_number}
                       </p>
                       <p className="text-gray-600">
-                        <strong>Account Holder:</strong> {withdrawal.accountHolderName}
+                        <strong>Account Holder:</strong> {withdrawal.account_holder_name}
                       </p>
-                      {withdrawal.phoneNumber && (
+                      {withdrawal.phone_number && (
                         <p className="text-gray-600">
-                          <strong>Phone:</strong> {withdrawal.phoneNumber}
+                          <strong>Phone:</strong> {withdrawal.phone_number}
                         </p>
                       )}
                     </div>
                     <div>
                       <p className="text-gray-600">
-                        <strong>Requested:</strong> {formatDate(withdrawal.createdAt)}
+                        <strong>Requested:</strong> {formatDate(withdrawal.created_at)}
                       </p>
-                      {withdrawal.processedAt && (
+                      {withdrawal.processed_at && (
                         <p className="text-gray-600">
-                          <strong>Processed:</strong> {formatDate(withdrawal.processedAt)}
+                          <strong>Processed:</strong> {formatDate(withdrawal.processed_at)}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  {withdrawal.adminNotes && (
+                  {withdrawal.admin_notes && (
                     <div className="mt-3 p-3 bg-blue-50 rounded-md">
                       <p className="text-sm">
-                        <strong>Admin Notes:</strong> {withdrawal.adminNotes}
+                        <strong>Admin Notes:</strong> {withdrawal.admin_notes}
                       </p>
                     </div>
                   )}
 
-                  {withdrawal.rejectionReason && (
+                  {withdrawal.rejection_reason && (
                     <div className="mt-3 p-3 bg-red-50 rounded-md">
                       <p className="text-sm text-red-700">
-                        <strong>Rejection Reason:</strong> {withdrawal.rejectionReason}
+                        <strong>Rejection Reason:</strong> {withdrawal.rejection_reason}
                       </p>
                     </div>
                   )}
                 </CardContent>
               </Card>
             ))}
+            
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  variant="outline"
+                  onClick={handleLoadMore}
+                  className="flex items-center gap-2 hover:bg-blue-50"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                  Load More ({withdrawals.length - visibleCount} remaining)
+                </Button>
+              </div>
+            )}
+            
+            {/* Show All Loaded Message */}
+            {!hasMore && withdrawals.length > 5 && (
+              <div className="text-center pt-4">
+                <p className="text-sm text-gray-500">
+                  Showing all {withdrawals.length} withdrawal requests
+                </p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

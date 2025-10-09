@@ -55,16 +55,16 @@ async def create_withdrawal_request(
             "id": withdrawal["id"],
             "userId": withdrawal["user_id"],
             "amount": withdrawal["amount"],
-            "accountType": withdrawal["account_type"],
-            "accountNumber": withdrawal["account_number"],
-            "accountHolderName": withdrawal["account_holder_name"],
-            "phoneNumber": withdrawal.get("phone_number"),
+            "account_type": withdrawal["account_type"],
+            "account_number": withdrawal["account_number"],
+            "account_holder_name": withdrawal["account_holder_name"],
+            "phone_number": withdrawal.get("phone_number"),
             "status": withdrawal["status"],
-            "adminNotes": withdrawal.get("admin_notes"),
-            "rejectionReason": withdrawal.get("rejection_reason"),
-            "createdAt": withdrawal["created_at"],
-            "processedAt": withdrawal.get("processed_at"),
-            "processedBy": withdrawal.get("processed_by")
+            "admin_notes": withdrawal.get("admin_notes"),
+            "rejection_reason": withdrawal.get("rejection_reason"),
+            "created_at": withdrawal["created_at"],
+            "processed_at": withdrawal.get("processed_at"),
+            "processed_by": withdrawal.get("processed_by")
         }
         
         return WithdrawalResponse(**mapped_withdrawal)
@@ -91,16 +91,16 @@ async def get_my_withdrawal_requests(
                 "id": withdrawal["id"],
                 "userId": withdrawal["user_id"],
                 "amount": withdrawal["amount"],
-                "accountType": withdrawal["account_type"],
-                "accountNumber": withdrawal["account_number"],
-                "accountHolderName": withdrawal["account_holder_name"],
-                "phoneNumber": withdrawal.get("phone_number"),
+                "account_type": withdrawal["account_type"],
+                "account_number": withdrawal["account_number"],
+                "account_holder_name": withdrawal["account_holder_name"],
+                "phone_number": withdrawal.get("phone_number"),
                 "status": withdrawal["status"],
-                "adminNotes": withdrawal.get("admin_notes"),
-                "rejectionReason": withdrawal.get("rejection_reason"),
-                "createdAt": withdrawal["created_at"],
-                "processedAt": withdrawal.get("processed_at"),
-                "processedBy": withdrawal.get("processed_by")
+                "admin_notes": withdrawal.get("admin_notes"),
+                "rejection_reason": withdrawal.get("rejection_reason"),
+                "created_at": withdrawal["created_at"],
+                "processed_at": withdrawal.get("processed_at"),
+                "processed_by": withdrawal.get("processed_by")
             }
             mapped_withdrawals.append(WithdrawalResponse(**mapped_withdrawal))
         return mapped_withdrawals
@@ -125,16 +125,16 @@ async def get_all_withdrawal_requests(
                 "id": withdrawal["id"],
                 "userId": withdrawal["user_id"],
                 "amount": withdrawal["amount"],
-                "accountType": withdrawal["account_type"],
-                "accountNumber": withdrawal["account_number"],
-                "accountHolderName": withdrawal["account_holder_name"],
-                "phoneNumber": withdrawal.get("phone_number"),
+                "account_type": withdrawal["account_type"],
+                "account_number": withdrawal["account_number"],
+                "account_holder_name": withdrawal["account_holder_name"],
+                "phone_number": withdrawal.get("phone_number"),
                 "status": withdrawal["status"],
-                "adminNotes": withdrawal.get("admin_notes"),
-                "rejectionReason": withdrawal.get("rejection_reason"),
-                "createdAt": withdrawal["created_at"],
-                "processedAt": withdrawal.get("processed_at"),
-                "processedBy": withdrawal.get("processed_by")
+                "admin_notes": withdrawal.get("admin_notes"),
+                "rejection_reason": withdrawal.get("rejection_reason"),
+                "created_at": withdrawal["created_at"],
+                "processed_at": withdrawal.get("processed_at"),
+                "processed_by": withdrawal.get("processed_by")
             }
             mapped_withdrawals.append(WithdrawalResponse(**mapped_withdrawal))
         return mapped_withdrawals

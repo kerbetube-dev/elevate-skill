@@ -1,30 +1,33 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8004';
+const API_BASE_URL = 'http://localhost:8000';
 
 // Types
 export interface WithdrawalRequest {
   amount: number;
-  accountType: 'CBE' | 'TeleBirr';
-  accountNumber: string;
-  accountHolderName: string;
-  phoneNumber?: string;
+  account_type: 'CBE' | 'TeleBirr';
+  account_number: string;
+  account_holder_name: string;
+  phone_number?: string;
 }
 
 export interface WithdrawalResponse {
   id: string;
   userId: string;
   amount: number;
-  accountType: string;
-  accountNumber: string;
-  accountHolderName: string;
-  phoneNumber?: string;
+  account_type: string;
+  account_number: string;
+  account_holder_name: string;
+  phone_number?: string;
   status: 'pending' | 'approved' | 'rejected';
-  adminNotes?: string;
-  rejectionReason?: string;
-  createdAt: string;
-  processedAt?: string;
-  processedBy?: string;
+  admin_notes?: string;
+  rejection_reason?: string;
+  created_at: string;
+  processed_at?: string;
+  processed_by?: string;
+  // Add user info for admin view
+  userName?: string;
+  userEmail?: string;
 }
 
 export interface WithdrawalStats {
@@ -37,6 +40,14 @@ export interface WithdrawalStats {
 class WithdrawalsService {
   private getAuthHeaders() {
     const token = localStorage.getItem('access_token');
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+  }
+
+  private getAdminAuthHeaders() {
+    const token = localStorage.getItem('adminToken');
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -102,7 +113,7 @@ class WithdrawalsService {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/withdrawals/`,
-        { headers: this.getAuthHeaders() }
+        { headers: this.getAdminAuthHeaders() }
       );
       return response.data;
     } catch (error: any) {
@@ -110,24 +121,28 @@ class WithdrawalsService {
     }
   }
 
-  async approveWithdrawal(withdrawalId: string, adminNotes?: string): Promise<void> {
+  async approveWithdrawal(withdrawalId: string, admin_notes?: string): Promise<void> {
     try {
+      const url = admin_notes 
+        ? `${API_BASE_URL}/withdrawals/${withdrawalId}/approve?admin_notes=${encodeURIComponent(admin_notes)}`
+        : `${API_BASE_URL}/withdrawals/${withdrawalId}/approve`;
+      
       await axios.post(
-        `${API_BASE_URL}/withdrawals/${withdrawalId}/approve`,
-        { adminNotes },
-        { headers: this.getAuthHeaders() }
+        url,
+        {},
+        { headers: this.getAdminAuthHeaders() }
       );
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to approve withdrawal request');
     }
   }
 
-  async rejectWithdrawal(withdrawalId: string, rejectionReason: string): Promise<void> {
+  async rejectWithdrawal(withdrawalId: string, rejection_reason: string): Promise<void> {
     try {
       await axios.post(
-        `${API_BASE_URL}/withdrawals/${withdrawalId}/reject`,
-        { rejectionReason },
-        { headers: this.getAuthHeaders() }
+        `${API_BASE_URL}/withdrawals/${withdrawalId}/reject?rejection_reason=${encodeURIComponent(rejection_reason)}`,
+        {},
+        { headers: this.getAdminAuthHeaders() }
       );
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to reject withdrawal request');

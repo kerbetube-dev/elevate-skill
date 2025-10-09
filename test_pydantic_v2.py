@@ -22,11 +22,11 @@ def test_pydantic_v2_validation():
             "paymentMethodId": "test-payment-method-id",
             "amount": 100.0,
             "status": "pending",
-            "adminNotes": None,
-            "createdAt": "2025-10-03T23:00:00Z",
+            "admin_notes": None,
+            "created_at": "2025-10-03T23:00:00Z",
             "approvedAt": None,
             "approvedBy": "46b3478a-17e1-4bcc-a365-a0f949de8404",  # String
-            "rejectionReason": None
+            "rejection_reason": None
         }
         response1 = PaymentRequestResponse(**data1)
         print("✅ String approvedBy works:", response1.approvedBy)
@@ -42,11 +42,11 @@ def test_pydantic_v2_validation():
             "paymentMethodId": "test-payment-method-id",
             "amount": 100.0,
             "status": "pending",
-            "adminNotes": None,
-            "createdAt": "2025-10-03T23:00:00Z",
+            "admin_notes": None,
+            "created_at": "2025-10-03T23:00:00Z",
             "approvedAt": None,
             "approvedBy": UUID("46b3478a-17e1-4bcc-a365-a0f949de8404"),  # UUID object
-            "rejectionReason": None
+            "rejection_reason": None
         }
         response2 = PaymentRequestResponse(**data2)
         print("✅ UUID approvedBy converted:", response2.approvedBy, "type:", type(response2.approvedBy))
@@ -62,11 +62,11 @@ def test_pydantic_v2_validation():
             "paymentMethodId": "test-payment-method-id",
             "amount": 100.0,
             "status": "pending",
-            "adminNotes": None,
-            "createdAt": "2025-10-03T23:00:00Z",
+            "admin_notes": None,
+            "created_at": "2025-10-03T23:00:00Z",
             "approvedAt": None,
             "approvedBy": None,  # None
-            "rejectionReason": None
+            "rejection_reason": None
         }
         response3 = PaymentRequestResponse(**data3)
         print("✅ None approvedBy works:", response3.approvedBy)

@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 interface PaymentMethod {
   id: string;
   type: 'cbe' | 'telebirr';
-  accountNumber: string;
+  account_number: string;
   holderName: string;
   isDefault: boolean;
 }
@@ -21,7 +21,7 @@ export function PaymentMethods() {
     {
       id: '1',
       type: 'cbe',
-      accountNumber: '1000123456789',
+      account_number: '1000123456789',
       holderName: 'John Doe',
       isDefault: true
     }
@@ -30,12 +30,12 @@ export function PaymentMethods() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMethod, setNewMethod] = useState({
     type: 'cbe' as 'cbe' | 'telebirr',
-    accountNumber: '',
+    account_number: '',
     holderName: ''
   });
 
   const handleAddMethod = () => {
-    if (!newMethod.accountNumber || !newMethod.holderName) {
+    if (!newMethod.account_number || !newMethod.holderName) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -51,7 +51,7 @@ export function PaymentMethods() {
     };
 
     setPaymentMethods([...paymentMethods, method]);
-    setNewMethod({ type: 'cbe', accountNumber: '', holderName: '' });
+    setNewMethod({ type: 'cbe', account_number: '', holderName: '' });
     setShowAddForm(false);
     
     toast({
@@ -145,12 +145,12 @@ export function PaymentMethods() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="accountNumber">Account Number</Label>
+              <Label htmlFor="account_number">Account Number</Label>
               <Input
-                id="accountNumber"
+                id="account_number"
                 placeholder={newMethod.type === 'cbe' ? 'CBE Account Number' : 'Telebirr Phone Number'}
-                value={newMethod.accountNumber}
-                onChange={(e) => setNewMethod({ ...newMethod, accountNumber: e.target.value })}
+                value={newMethod.account_number}
+                onChange={(e) => setNewMethod({ ...newMethod, account_number: e.target.value })}
               />
             </div>
             
@@ -196,7 +196,7 @@ export function PaymentMethods() {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {method.accountNumber}
+                      {method.account_number}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {method.holderName}

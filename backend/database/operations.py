@@ -7,6 +7,14 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from .connection import get_async_session
 
+# Import in-memory database as fallback
+try:
+    from ..dev_inmemory import InMemoryDatabase
+    inmemory_db = InMemoryDatabase()
+    USE_INMEMORY_FALLBACK = True
+except ImportError:
+    USE_INMEMORY_FALLBACK = False
+
 class DatabaseOperations:
     """
     Database operations using PostgreSQL/Supabase
@@ -19,52 +27,106 @@ class DatabaseOperations:
     # User operations
     async def create_user(self, user_data: dict) -> dict:
         """Create a new user"""
+        # Try real database first, fallback to in-memory if not available
+        try:
+            user_id = str(uuid.uuid4())
+            referral_code = f"ELEVATE{user_id[:8].upper()}"
+
+            query = """
+            INSERT INTO users (id, full_name, email, password, referral_code, referred_by, created_at, role, total_earnings)
+            VALUES (:id, :full_name, :email, :password, :referral_code, :referred_by, :created_at, :role, :total_earnings)
+            RETURNING *
+            """
+
+            values = {
+                "id": user_id,
+                "full_name": user_data["fullName"],
+                "email": user_data["email"],
+                "password": user_data["password"],
+                "referral_code": referral_code,
+                "referred_by": user_data.get("referralCode"),
+                "created_at": datetime.utcnow(),
+                "role": "student",
+                "total_earnings": 0
+            }
+
+            async with get_async_session() as session:  # type: AsyncSession
+                row = await session.execute(text(query), values)
+                result = row.mappings().first()
+                await session.commit()
+            if result:
+                result_dict = dict(result)
+                # Convert UUID to string if present
+                if 'id' in result_dict and result_dict['id']:
+                    result_dict['id'] = str(result_dict['id'])
+                return result_dict
+            return None
+        except Exception as e:
+            print(f"Real database failed: {e}")
+            if USE_INMEMORY_FALLBACK:
+                print("Using in-memory database fallback")
+                # Use in-memory database as fallback
+                return self._create_user_inmemory(user_data)
+            raise
+
+    def _create_user_inmemory(self, user_data: dict) -> dict:
+        """Create user in in-memory database (fallback)"""
         user_id = str(uuid.uuid4())
         referral_code = f"ELEVATE{user_id[:8].upper()}"
-        
-        query = """
-        INSERT INTO users (id, full_name, email, password, referral_code, referred_by, created_at, role, total_earnings)
-        VALUES (:id, :full_name, :email, :password, :referral_code, :referred_by, :created_at, :role, :total_earnings)
-        RETURNING *
-        """
-        
-        values = {
+
+        user = {
             "id": user_id,
-            "full_name": user_data["fullName"],
+            "fullName": user_data["fullName"],
             "email": user_data["email"],
-            "password": user_data["password"],
-            "referral_code": referral_code,
-            "referred_by": user_data.get("referralCode"),
-            "created_at": datetime.utcnow(),
+            "password": user_data["password"],  # In production, this should be hashed
+            "referralCode": referral_code,
+            "created_at": datetime.utcnow().isoformat(),
             "role": "student",
-            "total_earnings": 0
+            "totalEarnings": 0
         }
-        
-        async with get_async_session() as session:  # type: AsyncSession
-            row = await session.execute(text(query), values)
-            result = row.mappings().first()
-            await session.commit()
-        if result:
-            result_dict = dict(result)
-            # Convert UUID to string if present
-            if 'id' in result_dict and result_dict['id']:
-                result_dict['id'] = str(result_dict['id'])
-            return result_dict
-        return None
-    
+
+        inmemory_db.users[user_id] = user
+        return user
+
+    def _create_referral_inmemory(self, referrer_id: str, referral_data: dict) -> dict:
+        """Create referral in in-memory database (fallback)"""
+        referral_id = str(uuid.uuid4())
+
+        referral = {
+            "id": referral_id,
+            "referrer_id": referrer_id,
+            "status": "pending",
+            "reward_earned": 0,
+            "date_referred": datetime.utcnow().isoformat(),
+            **referral_data
+        }
+
+        inmemory_db.referrals[referral_id] = referral
+        return referral
+
     async def get_user_by_email(self, email: str) -> Optional[dict]:
         """Get user by email"""
-        query = "SELECT * FROM users WHERE email = :email"
-        async with get_async_session() as session:
-            row = await session.execute(text(query), {"email": email})
-            result = row.mappings().first()
-        if result:
-            result_dict = dict(result)
-            # Convert UUID to string if present
-            if 'id' in result_dict and result_dict['id']:
-                result_dict['id'] = str(result_dict['id'])
-            return result_dict
-        return None
+        try:
+            query = "SELECT * FROM users WHERE email = :email"
+            async with get_async_session() as session:
+                row = await session.execute(text(query), {"email": email})
+                result = row.mappings().first()
+            if result:
+                result_dict = dict(result)
+                # Convert UUID to string if present
+                if 'id' in result_dict and result_dict['id']:
+                    result_dict['id'] = str(result_dict['id'])
+                return result_dict
+            return None
+        except Exception as e:
+            print(f"Real database failed: {e}")
+            if USE_INMEMORY_FALLBACK:
+                print("Using in-memory database fallback")
+                # Use in-memory database as fallback
+                for user in inmemory_db.users.values():
+                    if user["email"] == email:
+                        return user
+            return None
     
     async def get_user_by_id(self, user_id: str) -> Optional[dict]:
         """Get user by ID"""
@@ -95,6 +157,8 @@ class DatabaseOperations:
     # Course operations
     async def get_all_courses(self) -> List[dict]:
         """Get all courses"""
+        import json
+        
         query = "SELECT * FROM courses ORDER BY created_at DESC"
         async with get_async_session() as session:
             rows = await session.execute(text(query))
@@ -104,20 +168,51 @@ class DatabaseOperations:
                 # Convert UUID to string if present
                 if 'id' in course_dict and course_dict['id']:
                     course_dict['id'] = str(course_dict['id'])
+                
+                # Parse JSON fields
+                if 'outcomes' in course_dict and course_dict['outcomes']:
+                    try:
+                        course_dict['outcomes'] = json.loads(course_dict['outcomes'])
+                    except (json.JSONDecodeError, TypeError):
+                        course_dict['outcomes'] = []
+                
+                if 'curriculum' in course_dict and course_dict['curriculum']:
+                    try:
+                        course_dict['curriculum'] = json.loads(course_dict['curriculum'])
+                    except (json.JSONDecodeError, TypeError):
+                        course_dict['curriculum'] = []
+                
                 courses.append(course_dict)
             return courses
     
     async def get_course_by_id(self, course_id: str) -> Optional[dict]:
         """Get course by ID"""
+        import json
+        
         query = "SELECT * FROM courses WHERE id = :course_id"
         async with get_async_session() as session:
             row = await session.execute(text(query), {"course_id": course_id})
             result = row.mappings().first()
         if result:
             result_dict = dict(result)
+            print(result_dict)
             # Convert UUID to string if present
             if 'id' in result_dict and result_dict['id']:
                 result_dict['id'] = str(result_dict['id'])
+            
+            # Parse JSON fields
+            # if 'outcomes' in result_dict and result_dict['outcomes']:
+            #     try:
+            #         result_dict['outcomes'] = json.loads(result_dict['outcomes'])
+            #     except (json.JSONDecodeError, TypeError):
+            #         result_dict['outcomes'] = []
+            
+            # if 'curriculum' in result_dict and result_dict['curriculum']:
+            #     try:
+            #         result_dict['curriculum'] = json.loads(result_dict['curriculum'])
+            #     except (json.JSONDecodeError, TypeError):
+            #         result_dict['curriculum'] = []
+            
             return result_dict
         return None
     
@@ -126,8 +221,8 @@ class DatabaseOperations:
         course_id = str(uuid.uuid4())
         
         query = """
-        INSERT INTO courses (id, title, description, image, price, duration, students, rating, level, instructor, created_at)
-        VALUES (:id, :title, :description, :image, :price, :duration, :students, :rating, :level, :instructor, :created_at)
+        INSERT INTO courses (id, title, description, image, price, duration, students, rating, level, instructor, outcomes, curriculum, created_at)
+        VALUES (:id, :title, :description, :image, :price, :duration, :students, :rating, :level, :instructor, :outcomes, :curriculum, :created_at)
         RETURNING *
         """
         
@@ -269,10 +364,10 @@ class DatabaseOperations:
             return {
                 'id': result_dict['id'],
                 'type': result_dict['type'],
-                'accountNumber': result_dict['account_number'],
+                'account_number': result_dict['account_number'],
                 'holderName': result_dict['holder_name'],
                 'isDefault': result_dict['is_default'],
-                'createdAt': result_dict['created_at']
+                'created_at': result_dict['created_at']
             }
         return None
     
@@ -295,10 +390,10 @@ class DatabaseOperations:
                 results.append({
                     'id': result_dict['id'],
                     'type': result_dict['type'],
-                    'accountNumber': result_dict['account_number'],
+                    'account_number': result_dict['account_number'],
                     'holderName': result_dict['holder_name'],
                     'isDefault': result_dict['is_default'],
-                    'createdAt': result_dict['created_at']
+                    'created_at': result_dict['created_at']
                 })
             return results
     
@@ -361,7 +456,7 @@ class DatabaseOperations:
                 "paymentAccountId": result_dict['payment_account_id'],
                 "amount": float(result_dict['amount']),
                 "status": result_dict['status'],
-                "createdAt": result_dict['created_at'].isoformat()
+                "created_at": result_dict['created_at'].isoformat()
             }
         return None
     
@@ -528,29 +623,37 @@ class DatabaseOperations:
     # Referral operations (updated to work with payment approval)
     async def create_referral(self, referrer_id: str, referral_data: dict) -> dict:
         """Create a new referral (status pending until payment approved)"""
-        referral_id = str(uuid.uuid4())
-        
-        query = """
-        INSERT INTO referrals (id, referrer_id, name, email, status, reward_earned, date_referred)
-        VALUES (:id, :referrer_id, :name, :email, :status, :reward_earned, :date_referred)
-        RETURNING *
-        """
-        
-        values = {
-            "id": referral_id,
-            "referrer_id": referrer_id,
-            "status": "pending",  # Changed from "completed" to "pending"
-            "reward_earned": 0,   # Changed from 100 to 0
-            "date_referred": datetime.utcnow(),
-            **referral_data
-        }
-        
-        async with get_async_session() as session:
-            row = await session.execute(text(query), values)
-            result = row.mappings().first()
-            await session.commit()
-        
-        return dict(result) if result else None
+        try:
+            referral_id = str(uuid.uuid4())
+
+            query = """
+            INSERT INTO referrals (id, referrer_id, name, email, status, reward_earned, date_referred)
+            VALUES (:id, :referrer_id, :name, :email, :status, :reward_earned, :date_referred)
+            RETURNING *
+            """
+
+            values = {
+                "id": referral_id,
+                "referrer_id": referrer_id,
+                "status": "pending",  # Changed from "completed" to "pending"
+                "reward_earned": 0,   # Changed from 100 to 0
+                "date_referred": datetime.utcnow(),
+                **referral_data
+            }
+
+            async with get_async_session() as session:
+                row = await session.execute(text(query), values)
+                result = row.mappings().first()
+                await session.commit()
+
+            return dict(result) if result else None
+        except Exception as e:
+            print(f"Real database failed: {e}")
+            if USE_INMEMORY_FALLBACK:
+                print("Using in-memory database fallback")
+                # Use in-memory database as fallback
+                return self._create_referral_inmemory(referrer_id, referral_data)
+            raise
     
     async def get_user_referrals(self, user_id: str) -> List[dict]:
         """Get user's referrals"""
@@ -570,9 +673,9 @@ class DatabaseOperations:
                 # Convert datetime to string
                 if 'date_referred' in result_dict and result_dict['date_referred']:
                     if hasattr(result_dict['date_referred'], 'isoformat'):
-                        result_dict['createdAt'] = result_dict['date_referred'].isoformat()
+                        result_dict['created_at'] = result_dict['date_referred'].isoformat()
                     else:
-                        result_dict['createdAt'] = str(result_dict['date_referred'])
+                        result_dict['created_at'] = str(result_dict['date_referred'])
                 
                 # Map field names to match Pydantic model
                 result_dict['rewardEarned'] = result_dict.pop('reward_earned', 0)
@@ -601,11 +704,21 @@ class DatabaseOperations:
     
     async def find_user_by_referral_code(self, referral_code: str) -> Optional[dict]:
         """Find user by referral code"""
-        query = "SELECT * FROM users WHERE referral_code = :referral_code"
-        async with get_async_session() as session:
-            row = await session.execute(text(query), {"referral_code": referral_code})
-            result = row.mappings().first()
-        return dict(result) if result else None
+        try:
+            query = "SELECT * FROM users WHERE referral_code = :referral_code"
+            async with get_async_session() as session:
+                row = await session.execute(text(query), {"referral_code": referral_code})
+                result = row.mappings().first()
+            return dict(result) if result else None
+        except Exception as e:
+            print(f"Real database failed: {e}")
+            if USE_INMEMORY_FALLBACK:
+                print("Using in-memory database fallback")
+                # Use in-memory database as fallback
+                for user in inmemory_db.users.values():
+                    if user["referralCode"] == referral_code:
+                        return user
+            return None
 
     # User management operations
     async def get_all_users(self) -> List[dict]:
@@ -1312,13 +1425,13 @@ class DatabaseOperations:
                 
                 # Convert snake_case to camelCase for frontend
                 result_dict['accountName'] = result_dict.pop('account_name')
-                result_dict['accountNumber'] = result_dict.pop('account_number')
+                result_dict['account_number'] = result_dict.pop('account_number')
                 result_dict['bankName'] = result_dict.pop('bank_name', None)
                 result_dict['qrCodeUrl'] = result_dict.pop('qr_code_url', None)
                 result_dict['isActive'] = result_dict.pop('is_active')
                 result_dict['displayOrder'] = result_dict.pop('display_order')
-                result_dict['createdAt'] = result_dict.pop('created_at')
-                result_dict['updatedAt'] = result_dict.pop('updated_at')
+                result_dict['created_at'] = result_dict.pop('created_at')
+                result_dict['updated_at'] = result_dict.pop('updated_at')
                 
                 results.append(result_dict)
             return results
@@ -1347,13 +1460,13 @@ class DatabaseOperations:
                 
                 # Convert snake_case to camelCase
                 result_dict['accountName'] = result_dict.pop('account_name')
-                result_dict['accountNumber'] = result_dict.pop('account_number')
+                result_dict['account_number'] = result_dict.pop('account_number')
                 result_dict['bankName'] = result_dict.pop('bank_name', None)
                 result_dict['qrCodeUrl'] = result_dict.pop('qr_code_url', None)
                 result_dict['isActive'] = result_dict.pop('is_active')
                 result_dict['displayOrder'] = result_dict.pop('display_order')
-                result_dict['createdAt'] = result_dict.pop('created_at')
-                result_dict['updatedAt'] = result_dict.pop('updated_at')
+                result_dict['created_at'] = result_dict.pop('created_at')
+                result_dict['updated_at'] = result_dict.pop('updated_at')
                 
                 return result_dict
             return None
@@ -1373,7 +1486,7 @@ class DatabaseOperations:
             "id": account_id,
             "type": data["type"],
             "account_name": data["accountName"],
-            "account_number": data["accountNumber"],
+            "account_number": data["account_number"],
             "bank_name": data.get("bankName"),
             "instructions": data.get("instructions"),
             "qr_code_url": data.get("qrCodeUrl"),
@@ -1396,13 +1509,13 @@ class DatabaseOperations:
                 
                 # Convert to camelCase
                 result_dict['accountName'] = result_dict.pop('account_name')
-                result_dict['accountNumber'] = result_dict.pop('account_number')
+                result_dict['account_number'] = result_dict.pop('account_number')
                 result_dict['bankName'] = result_dict.pop('bank_name', None)
                 result_dict['qrCodeUrl'] = result_dict.pop('qr_code_url', None)
                 result_dict['isActive'] = result_dict.pop('is_active')
                 result_dict['displayOrder'] = result_dict.pop('display_order')
-                result_dict['createdAt'] = result_dict.pop('created_at')
-                result_dict['updatedAt'] = result_dict.pop('updated_at')
+                result_dict['created_at'] = result_dict.pop('created_at')
+                result_dict['updated_at'] = result_dict.pop('updated_at')
                 
                 return result_dict
         return None
@@ -1416,7 +1529,7 @@ class DatabaseOperations:
         field_mapping = {
             "type": "type",
             "accountName": "account_name",
-            "accountNumber": "account_number",
+            "account_number": "account_number",
             "bankName": "bank_name",
             "instructions": "instructions",
             "qrCodeUrl": "qr_code_url",
@@ -1454,13 +1567,13 @@ class DatabaseOperations:
                 
                 # Convert to camelCase
                 result_dict['accountName'] = result_dict.pop('account_name')
-                result_dict['accountNumber'] = result_dict.pop('account_number')
+                result_dict['account_number'] = result_dict.pop('account_number')
                 result_dict['bankName'] = result_dict.pop('bank_name', None)
                 result_dict['qrCodeUrl'] = result_dict.pop('qr_code_url', None)
                 result_dict['isActive'] = result_dict.pop('is_active')
                 result_dict['displayOrder'] = result_dict.pop('display_order')
-                result_dict['createdAt'] = result_dict.pop('created_at')
-                result_dict['updatedAt'] = result_dict.pop('updated_at')
+                result_dict['created_at'] = result_dict.pop('created_at')
+                result_dict['updated_at'] = result_dict.pop('updated_at')
                 
                 return result_dict
         return None
@@ -1523,12 +1636,12 @@ class DatabaseOperations:
                 result_dict['paymentAccountId'] = result_dict.pop('payment_account_id')
                 result_dict['transactionScreenshotUrl'] = result_dict.pop('transaction_screenshot_url')
                 result_dict['transactionReference'] = result_dict.pop('transaction_reference', None)
-                result_dict['adminNotes'] = result_dict.pop('admin_notes', None)
-                result_dict['rejectionReason'] = result_dict.pop('rejection_reason', None)
+                result_dict['admin_notes'] = result_dict.pop('admin_notes', None)
+                result_dict['rejection_reason'] = result_dict.pop('rejection_reason', None)
                 result_dict['approvedBy'] = result_dict.pop('approved_by', None)
                 result_dict['approvedAt'] = result_dict.pop('approved_at', None)
-                result_dict['createdAt'] = result_dict.pop('created_at')
-                result_dict['updatedAt'] = result_dict.pop('updated_at')
+                result_dict['created_at'] = result_dict.pop('created_at')
+                result_dict['updated_at'] = result_dict.pop('updated_at')
                 
                 return result_dict
         return None
@@ -1565,15 +1678,15 @@ class DatabaseOperations:
                 result_dict['paymentAccountId'] = result_dict.pop('payment_account_id')
                 result_dict['transactionScreenshotUrl'] = result_dict.pop('transaction_screenshot_url')
                 result_dict['transactionReference'] = result_dict.pop('transaction_reference', None)
-                result_dict['adminNotes'] = result_dict.pop('admin_notes', None)
-                result_dict['rejectionReason'] = result_dict.pop('rejection_reason', None)
+                result_dict['admin_notes'] = result_dict.pop('admin_notes', None)
+                result_dict['rejection_reason'] = result_dict.pop('rejection_reason', None)
                 result_dict['approvedBy'] = result_dict.pop('approved_by', None)
                 result_dict['approvedAt'] = result_dict.pop('approved_at', None)
-                result_dict['createdAt'] = result_dict.pop('created_at')
-                result_dict['updatedAt'] = result_dict.pop('updated_at')
+                result_dict['created_at'] = result_dict.pop('created_at')
+                result_dict['updated_at'] = result_dict.pop('updated_at')
                 result_dict['courseTitle'] = result_dict.pop('course_title')
                 result_dict['paymentAccountName'] = result_dict.pop('payment_account_name')
-                result_dict['paymentAccountType'] = result_dict.pop('payment_account_type')
+                result_dict['paymentaccount_type'] = result_dict.pop('payment_account_type')
                 
                 results.append(result_dict)
             return results
@@ -1612,17 +1725,17 @@ class DatabaseOperations:
                 result_dict['paymentAccountId'] = result_dict.pop('payment_account_id')
                 result_dict['transactionScreenshotUrl'] = result_dict.pop('transaction_screenshot_url')
                 result_dict['transactionReference'] = result_dict.pop('transaction_reference', None)
-                result_dict['adminNotes'] = result_dict.pop('admin_notes', None)
-                result_dict['rejectionReason'] = result_dict.pop('rejection_reason', None)
+                result_dict['admin_notes'] = result_dict.pop('admin_notes', None)
+                result_dict['rejection_reason'] = result_dict.pop('rejection_reason', None)
                 result_dict['approvedBy'] = result_dict.pop('approved_by', None)
                 result_dict['approvedAt'] = result_dict.pop('approved_at', None)
-                result_dict['createdAt'] = result_dict.pop('created_at')
-                result_dict['updatedAt'] = result_dict.pop('updated_at')
+                result_dict['created_at'] = result_dict.pop('created_at')
+                result_dict['updated_at'] = result_dict.pop('updated_at')
                 result_dict['userName'] = result_dict.pop('user_name')
                 result_dict['userEmail'] = result_dict.pop('user_email')
                 result_dict['courseTitle'] = result_dict.pop('course_title')
                 result_dict['paymentAccountName'] = result_dict.pop('payment_account_name')
-                result_dict['paymentAccountType'] = result_dict.pop('payment_account_type')
+                result_dict['paymentaccount_type'] = result_dict.pop('payment_account_type')
                 
                 return result_dict
         return None
@@ -1900,7 +2013,7 @@ class DatabaseOperations:
                 result_dict['courseId'] = result_dict.pop('course_id')
                 result_dict['bonusAmount'] = float(result_dict.pop('bonus_amount'))
                 result_dict['paidAt'] = result_dict.pop('paid_at', None)
-                result_dict['createdAt'] = result_dict.pop('created_at')
+                result_dict['created_at'] = result_dict.pop('created_at')
                 result_dict['referredUserName'] = result_dict.pop('referred_user_name')
                 result_dict['courseTitle'] = result_dict.pop('course_title')
                 
@@ -1965,10 +2078,10 @@ class DatabaseOperations:
             "id": withdrawal_id,
             "user_id": user_id,
             "amount": withdrawal_data["amount"],
-            "account_type": withdrawal_data["accountType"],
-            "account_number": withdrawal_data["accountNumber"],
-            "account_holder_name": withdrawal_data["accountHolderName"],
-            "phone_number": withdrawal_data.get("phoneNumber"),
+            "account_type": withdrawal_data["account_type"],
+            "account_number": withdrawal_data["account_number"],
+            "account_holder_name": withdrawal_data["account_holder_name"],
+            "phone_number": withdrawal_data.get("phone_number"),
             "status": "pending",
             "created_at": datetime.utcnow()
         }
@@ -2016,14 +2129,14 @@ class DatabaseOperations:
                     result_dict['processed_at'] = result_dict['processed_at'].isoformat()
                 
                 # Map field names to match API response
-                result_dict['accountType'] = result_dict.pop('account_type', '')
-                result_dict['accountNumber'] = result_dict.pop('account_number', '')
-                result_dict['accountHolderName'] = result_dict.pop('account_holder_name', '')
-                result_dict['phoneNumber'] = result_dict.pop('phone_number', None)
-                result_dict['processedAt'] = result_dict.pop('processed_at', None)
-                result_dict['processedBy'] = result_dict.pop('processed_by', None)
-                result_dict['adminNotes'] = result_dict.pop('admin_notes', None)
-                result_dict['rejectionReason'] = result_dict.pop('rejection_reason', None)
+                result_dict['account_type'] = result_dict.pop('account_type', '')
+                result_dict['account_number'] = result_dict.pop('account_number', '')
+                result_dict['account_holder_name'] = result_dict.pop('account_holder_name', '')
+                result_dict['phone_number'] = result_dict.pop('phone_number', None)
+                result_dict['processed_at'] = result_dict.pop('processed_at', None)
+                result_dict['processed_at'] = result_dict.pop('processed_by', None)
+                result_dict['admin_notes'] = result_dict.pop('admin_notes', None)
+                result_dict['rejection_reason'] = result_dict.pop('rejection_reason', None)
                 
                 results.append(result_dict)
             return results
@@ -2067,14 +2180,14 @@ class DatabaseOperations:
                     result_dict['processed_at'] = result_dict['processed_at'].isoformat()
                 
                 # Map field names
-                result_dict['accountType'] = result_dict.pop('account_type', '')
-                result_dict['accountNumber'] = result_dict.pop('account_number', '')
-                result_dict['accountHolderName'] = result_dict.pop('account_holder_name', '')
-                result_dict['phoneNumber'] = result_dict.pop('phone_number', None)
-                result_dict['processedAt'] = result_dict.pop('processed_at', None)
-                result_dict['processedBy'] = result_dict.pop('processed_by', None)
-                result_dict['adminNotes'] = result_dict.pop('admin_notes', None)
-                result_dict['rejectionReason'] = result_dict.pop('rejection_reason', None)
+                result_dict['account_type'] = result_dict.pop('account_type', '')
+                result_dict['account_number'] = result_dict.pop('account_number', '')
+                result_dict['account_holder_name'] = result_dict.pop('account_holder_name', '')
+                result_dict['phone_number'] = result_dict.pop('phone_number', None)
+                result_dict['processed_at'] = result_dict.pop('processed_at', None)
+                result_dict['processed_at'] = result_dict.pop('processed_by', None)
+                result_dict['admin_notes'] = result_dict.pop('admin_notes', None)
+                result_dict['rejection_reason'] = result_dict.pop('rejection_reason', None)
                 result_dict['userName'] = result_dict.pop('full_name', '')
                 result_dict['userEmail'] = result_dict.pop('email', '')
                 

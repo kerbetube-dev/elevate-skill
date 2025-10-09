@@ -65,7 +65,7 @@ class UserLogin(BaseModel):
 
 class PaymentMethod(BaseModel):
     type: str
-    accountNumber: str
+    account_number: str
     holderName: str
 
 
@@ -128,7 +128,7 @@ async def register(user: UserRegister):
         "password": hashed_password,
         "referralCode": referral_code,
         "referredBy": user.referralCode,
-        "createdAt": datetime.utcnow().isoformat(),
+        "created_at": datetime.utcnow().isoformat(),
         "enrolledCourses": [],
         "totalEarnings": 0
     }

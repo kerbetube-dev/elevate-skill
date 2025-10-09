@@ -34,6 +34,7 @@ import videoEditingImg from "@/assets/video-editing.jpg";
 import englishCommunicationImg from "@/assets/english-communication.jpg";
 import webDevelopmentImg from "@/assets/web-development.jpg";
 import appDevelopmentImg from "@/assets/app-development.jpg";
+import { getImageUrl } from "@/services/admin";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("home");
@@ -316,13 +317,25 @@ const Dashboard = () => {
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {courses.map((course) => (
-                <Card key={course.id} className="border-0 shadow-elegant hover:shadow-glow transition-all duration-300">
+                <Card key={course.id} className="border-0 shadow-elegant hover:shadow-glow transition-all duration-300 cursor-pointer" onClick={() => navigate(`/course/${course.id}`)}>
                   <div className="relative">
-                    <img 
-                      src={course.image || digitalMarketingImg} 
-                      alt={course.title}
-                      className="w-full h-32 object-cover rounded-t-lg"
-                    />
+                    {course.image ? (
+                      <img 
+                        src={getImageUrl(course.image)} 
+                        alt={course.title}
+                        className="w-full h-32 object-cover rounded-t-lg"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-full h-32 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center rounded-t-lg ${course.image ? 'hidden' : ''}`}>
+                      <div className="text-center text-white">
+                        <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-80" />
+                        <p className="text-xs opacity-90">Course Preview</p>
+                      </div>
+                    </div>
                     <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
                       {course.price} Birr
                     </Badge>
@@ -338,9 +351,12 @@ const Dashboard = () => {
                     <Button 
                       variant="hero" 
                       className="w-full"
-                      onClick={() => setSelectedCourse(course)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/course/${course.id}`);
+                      }}
                     >
-                      Enroll Now
+                      View Details
                     </Button>
                   </CardContent>
                 </Card>

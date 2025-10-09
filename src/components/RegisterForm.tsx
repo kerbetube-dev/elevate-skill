@@ -34,10 +34,13 @@ const RegisterForm = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
+    // Password validation matching backend requirements
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/;
+
+    if (!passwordRegex.test(formData.password)) {
       toast({
         title: "Weak Password",
-        description: "Password must be at least 6 characters long.",
+        description: "Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character.",
         variant: "destructive"
       });
       return;
@@ -72,9 +75,29 @@ const RegisterForm = () => {
       navigate('/dashboard');
       
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create account. Please try again.";
+
+      // Provide more specific error messages based on error content
+      let title = "Registration Failed";
+      let description = errorMessage;
+
+      if (errorMessage.includes('Email already registered')) {
+        title = "Email Already Exists";
+        description = "This email address is already registered. Please use a different email or try logging in instead.";
+      } else if (errorMessage.includes('Password') && errorMessage.includes('character')) {
+        title = "Password Requirements Not Met";
+        description = errorMessage + " Please ensure your password meets all requirements.";
+      } else if (errorMessage.includes('Network') || errorMessage.includes('connection')) {
+        title = "Connection Error";
+        description = "Please check your internet connection and try again.";
+      } else if (errorMessage.includes('timeout')) {
+        title = "Request Timeout";
+        description = "The request took too long. Please try again.";
+      }
+
       toast({
-        title: "Registration Failed",
-        description: error instanceof Error ? error.message : "Failed to create account. Please try again.",
+        title,
+        description,
         variant: "destructive"
       });
     } finally {
@@ -145,7 +168,7 @@ const RegisterForm = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Create a password"
+                    placeholder="Create a strong password"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     required
@@ -159,6 +182,9 @@ const RegisterForm = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Password must be 8+ characters with uppercase, lowercase, number, and special character
+                </p>
               </div>
 
               <div className="space-y-2">

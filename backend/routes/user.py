@@ -62,7 +62,7 @@ async def add_payment_method(
     """Add a new payment method"""
     method_data = {
         "type": payment_method.type,
-        "account_number": payment_method.accountNumber,
+        "account_number": payment_method.account_number,
         "holder_name": payment_method.holderName
     }
     

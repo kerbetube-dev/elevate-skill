@@ -197,7 +197,7 @@ async def approve_payment_request(
         result = await db_ops.approve_payment_and_enroll(
             request_id=request_id,
             admin_id=current_user["id"],
-            admin_notes=approval.adminNotes
+            admin_notes=approval.admin_notes
         )
         
         return {
@@ -231,7 +231,7 @@ async def reject_payment_request(
             detail="Only administrators can reject payments"
         )
     
-    if not rejection.rejectionReason:
+    if not rejection.rejection_reason:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Rejection reason is required"
@@ -241,7 +241,7 @@ async def reject_payment_request(
         await db_ops.reject_payment_request(
             request_id=request_id,
             admin_id=current_user["id"],
-            rejection_reason=rejection.rejectionReason
+            rejection_reason=rejection.rejection_reason
         )
         
         return {"message": "Payment request rejected successfully"}

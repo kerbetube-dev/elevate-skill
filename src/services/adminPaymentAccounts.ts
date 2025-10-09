@@ -5,7 +5,7 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8004';
+const API_BASE_URL = 'http://localhost:8000';
 
 // ===================================
 // Types
@@ -15,20 +15,20 @@ export interface PaymentAccount {
   id: string;
   type: string;
   accountName: string;
-  accountNumber: string;
+  account_number: string;
   bankName?: string;
   instructions?: string;
   qrCodeUrl?: string;
   isActive: boolean;
   displayOrder: number;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreatePaymentAccountData {
   type: string;
   accountName: string;
-  accountNumber: string;
+  account_number: string;
   bankName?: string;
   instructions?: string;
   qrCodeUrl?: string;
@@ -39,7 +39,7 @@ export interface CreatePaymentAccountData {
 export interface UpdatePaymentAccountData {
   type?: string;
   accountName?: string;
-  accountNumber?: string;
+  account_number?: string;
   bankName?: string;
   instructions?: string;
   qrCodeUrl?: string;

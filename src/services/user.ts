@@ -6,7 +6,7 @@ export interface UserProfile {
     fullName: string;
     email: string;
     referralCode: string;
-    createdAt: string;
+    created_at: string;
     role: string;
   };
   enrolledCourses: any[];

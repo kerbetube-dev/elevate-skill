@@ -56,7 +56,7 @@ class UserLogin(BaseModel):
 
 class PaymentMethodCreate(BaseModel):
     type: PaymentType
-    accountNumber: str
+    account_number: str
     holderName: str
 
 # Old models - keeping for backward compatibility
@@ -66,8 +66,8 @@ class CourseEnrollment(BaseModel):
 
 class PaymentApprovalRequest(BaseModel):
     status: PaymentStatus
-    adminNotes: Optional[str] = None
-    rejectionReason: Optional[str] = None
+    admin_notes: Optional[str] = None
+    rejection_reason: Optional[str] = None
 
 class AdminLogin(BaseModel):
     email: EmailStr
@@ -79,7 +79,7 @@ class AdminUserResponse(BaseModel):
     fullName: str
     role: AdminRole
     isActive: bool
-    createdAt: str
+    created_at: str
     lastLogin: Optional[str] = None
 
 class CourseCreate(BaseModel):
@@ -89,6 +89,8 @@ class CourseCreate(BaseModel):
     duration: str
     level: CourseLevel
     image: Optional[str] = None
+    outcomes: Optional[List[str]] = None
+    curriculum: Optional[List[str]] = None
 
 class CourseUpdate(BaseModel):
     title: Optional[str] = None
@@ -97,6 +99,8 @@ class CourseUpdate(BaseModel):
     duration: Optional[str] = None
     level: Optional[CourseLevel] = None
     image: Optional[str] = None
+    outcomes: Optional[List[str]] = None
+    curriculum: Optional[List[str]] = None
 
 # Response Models
 class UserResponse(BaseModel):
@@ -104,7 +108,7 @@ class UserResponse(BaseModel):
     fullName: str
     email: EmailStr
     referralCode: str
-    createdAt: str
+    created_at: str
     role: UserRole = UserRole.STUDENT
 
 class CourseResponse(BaseModel):
@@ -118,14 +122,16 @@ class CourseResponse(BaseModel):
     rating: float
     level: str
     instructor: str
+    outcomes: Optional[List[str]] = None
+    curriculum: Optional[List[str]] = None
 
 class PaymentMethodResponse(BaseModel):
     id: str
     type: PaymentType
-    accountNumber: str
+    account_number: str
     holderName: str
     isDefault: bool
-    createdAt: str
+    created_at: str
 
 class EnrollmentResponse(BaseModel):
     id: str
@@ -169,7 +175,7 @@ class TokenResponse(BaseModel):
 class AdminPaymentAccountCreate(BaseModel):
     type: str  # PaymentType value
     accountName: str
-    accountNumber: str
+    account_number: str
     bankName: Optional[str] = None
     instructions: Optional[str] = None
     qrCodeUrl: Optional[str] = None
@@ -179,7 +185,7 @@ class AdminPaymentAccountCreate(BaseModel):
 class AdminPaymentAccountUpdate(BaseModel):
     type: Optional[str] = None
     accountName: Optional[str] = None
-    accountNumber: Optional[str] = None
+    account_number: Optional[str] = None
     bankName: Optional[str] = None
     instructions: Optional[str] = None
     qrCodeUrl: Optional[str] = None
@@ -190,14 +196,14 @@ class AdminPaymentAccountResponse(BaseModel):
     id: str
     type: str
     accountName: str
-    accountNumber: str
+    account_number: str
     bankName: Optional[str] = None
     instructions: Optional[str] = None
     qrCodeUrl: Optional[str] = None
     isActive: bool
     displayOrder: int
-    createdAt: str
-    updatedAt: str
+    created_at: str
+    updated_at: str
 
 class PaymentRequestCreate(BaseModel):
     courseId: str
@@ -215,18 +221,18 @@ class PaymentRequestResponse(BaseModel):
     transactionScreenshotUrl: str
     transactionReference: Optional[str] = None
     status: PaymentStatus
-    adminNotes: Optional[str] = None
-    rejectionReason: Optional[str] = None
+    admin_notes: Optional[str] = None
+    rejection_reason: Optional[str] = None
     approvedBy: Optional[str] = None
     approvedAt: Optional[str] = None
-    createdAt: str
-    updatedAt: str
+    created_at: str
+    updated_at: str
     # Additional info
     userName: Optional[str] = None
     userEmail: Optional[str] = None
     courseTitle: Optional[str] = None
     paymentAccountName: Optional[str] = None
-    paymentAccountType: Optional[str] = None
+    paymentaccount_type: Optional[str] = None
     
     @field_validator('approvedBy', 'id', 'userId', 'courseId', 'paymentAccountId', mode='before')
     @classmethod
@@ -266,7 +272,7 @@ class ReferralEarningResponse(BaseModel):
     bonusAmount: float
     status: str  # 'pending' or 'paid'
     paidAt: Optional[str] = None
-    createdAt: str
+    created_at: str
     # Additional info
     referredUserName: Optional[str] = None
     courseTitle: Optional[str] = None
@@ -291,7 +297,7 @@ class ReferralResponse(BaseModel):
     email: str
     status: str
     rewardEarned: float
-    createdAt: str
+    created_at: str
     completedAt: Optional[str] = None
     referredUserName: Optional[str] = None
     
@@ -308,7 +314,7 @@ class ReferralEarningResponse(BaseModel):
     referredUserId: str
     amount: float
     status: str
-    createdAt: str
+    created_at: str
     completedAt: Optional[str] = None
     referredUserName: Optional[str] = None
     referredUserEmail: Optional[str] = None
@@ -326,27 +332,27 @@ class ReferralCreateRequest(BaseModel):
 # Withdrawal System Models
 class WithdrawalRequest(BaseModel):
     amount: float
-    accountType: str  # "CBE" or "TeleBirr"
-    accountNumber: str
-    accountHolderName: str
-    phoneNumber: Optional[str] = None
+    account_type: str  # "CBE" or "TeleBirr"
+    account_number: str
+    account_holder_name: str
+    phone_number: Optional[str] = None
 
 class WithdrawalResponse(BaseModel):
     id: str
     userId: str
     amount: float
-    accountType: str
-    accountNumber: str
-    accountHolderName: str
-    phoneNumber: Optional[str] = None
+    account_type: str
+    account_number: str
+    account_holder_name: str
+    phone_number: Optional[str] = None
     status: str  # "pending", "approved", "rejected"
-    adminNotes: Optional[str] = None
-    rejectionReason: Optional[str] = None
-    createdAt: str
-    processedAt: Optional[str] = None
-    processedBy: Optional[str] = None
+    admin_notes: Optional[str] = None
+    rejection_reason: Optional[str] = None
+    created_at: str
+    updated_at: Optional[str] = None
+    processed_at: Optional[str] = None
     
-    @field_validator('id', 'userId', 'processedBy', mode='before')
+    @field_validator('id', 'userId', 'processed_at', mode='before')
     @classmethod
     def convert_uuid_to_string(cls, v):
         if v is not None:

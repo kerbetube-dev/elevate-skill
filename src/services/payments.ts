@@ -72,6 +72,13 @@ export interface CreatePaymentRequestData {
   transactionReference?: string;
 }
 
+export interface CreatePaymentRequestWithFile {
+  courseId: string;
+  paymentAccountId: string;
+  transactionReference: string;
+  transactionScreenshot: File;
+}
+
 // ===================================
 // Payment Account Services
 // ===================================
@@ -88,6 +95,13 @@ class PaymentService {
       console.error('Error fetching payment accounts:', error);
       throw new Error(error.response?.data?.detail || 'Failed to fetch payment accounts');
     }
+  }
+
+  /**
+   * Get payment accounts (alias for getActivePaymentAccounts)
+   */
+  async getPaymentAccounts(): Promise<PaymentAccount[]> {
+    return this.getActivePaymentAccounts();
   }
 
   /**
@@ -133,6 +147,30 @@ class PaymentService {
       return response.data;
     } catch (error: any) {
       console.error('Error creating payment request:', error);
+      throw new Error(error.response?.data?.detail || 'Failed to create payment request');
+    }
+  }
+
+  /**
+   * Create a payment request with file upload
+   */
+  async createPaymentRequestWithFile(data: CreatePaymentRequestWithFile): Promise<PaymentRequest> {
+    try {
+      // First upload the screenshot
+      const uploadResult = await this.uploadTransactionScreenshot(data.transactionScreenshot);
+      
+      // Then create the payment request
+      const paymentData: CreatePaymentRequestData = {
+        courseId: data.courseId,
+        paymentAccountId: data.paymentAccountId,
+        amount: 0, // Will be set by backend based on course
+        transactionScreenshotUrl: uploadResult.url,
+        transactionReference: data.transactionReference
+      };
+      
+      return this.createPaymentRequest(paymentData);
+    } catch (error: any) {
+      console.error('Error creating payment request with file:', error);
       throw new Error(error.response?.data?.detail || 'Failed to create payment request');
     }
   }

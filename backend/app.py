@@ -19,6 +19,7 @@ from routes.payment_accounts import router as payment_accounts_router
 from routes.payments import router as payments_router
 from routes.referrals import router as referrals_router
 from routes.withdrawals import router as withdrawals_router
+from routes.stats import router as stats_router
 
 # Import error handlers
 from error_handlers import register_error_handlers
@@ -79,6 +80,7 @@ app.include_router(payment_accounts_router)
 app.include_router(payments_router)
 app.include_router(referrals_router)
 app.include_router(withdrawals_router)
+app.include_router(stats_router)
 
 # Set up static file serving for transaction screenshots
 UPLOAD_DIR = Path(__file__).parent / "uploads"

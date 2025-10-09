@@ -11,6 +11,14 @@ import Dashboard from "./components/Dashboard";
 import EnhancedLoginForm from "./components/EnhancedLoginForm";
 import EnhancedRegisterForm from "./components/EnhancedRegisterForm";
 import EnhancedDashboard from "./components/EnhancedDashboard";
+// Modern Components
+import { ModernLoginForm } from "./components/auth/ModernLoginForm";
+import { ModernRegisterForm } from "./components/auth/ModernRegisterForm";
+import { ModernDashboard } from "./components/dashboard/ModernDashboard";
+import ModernLandingPage from "./components/ModernLandingPage";
+import { ModernCourseDetails } from "./components/course/ModernCourseDetails";
+import { ModernPaymentPage } from "./components/payment/ModernPaymentPage";
+// Admin & Other Pages
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserCourseDetail from "./pages/UserCourseDetail";
@@ -28,12 +36,12 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/register" element={<EnhancedRegisterForm />} />
-            <Route path="/login" element={<EnhancedLoginForm />} />
-            <Route path="/dashboard" element={<EnhancedDashboard />} />
-            <Route path="/payment" element={<PaymentPage />} />
-            <Route path="/course/:courseId" element={<UserCourseDetail />} />
+            <Route path="/" element={<ModernLandingPage />} />
+            <Route path="/register" element={<ModernRegisterForm />} />
+            <Route path="/login" element={<ModernLoginForm />} />
+            <Route path="/dashboard" element={<ModernDashboard />} />
+            <Route path="/payment" element={<ModernPaymentPage />} />
+            <Route path="/course/:courseId" element={<ModernCourseDetails />} />
             
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />

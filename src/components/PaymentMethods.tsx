@@ -17,15 +17,7 @@ interface PaymentMethod {
 
 export function PaymentMethods() {
   const { toast } = useToast();
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
-    {
-      id: '1',
-      type: 'cbe',
-      account_number: '1000123456789',
-      holderName: 'John Doe',
-      isDefault: true
-    }
-  ]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMethod, setNewMethod] = useState({

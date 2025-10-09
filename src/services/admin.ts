@@ -9,7 +9,18 @@ export const getImageUrl = (imagePath: string) => {
   if (!imagePath) return null;
   // If it's already a full URL, return as is
   if (imagePath.startsWith('http')) return imagePath;
-  // Otherwise, prepend the API base URL
+  
+  // Handle backend uploaded images
+  if (imagePath.startsWith('/uploads/')) {
+    return `${API_BASE_URL}${imagePath}`;
+  }
+  
+  // Handle frontend assets - convert /src/assets/ to /src/assets/ for Vite
+  if (imagePath.startsWith('/src/assets/')) {
+    return imagePath;
+  }
+  
+  // Default: prepend the API base URL
   return `${API_BASE_URL}${imagePath}`;
 };
 

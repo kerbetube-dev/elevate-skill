@@ -1,21 +1,35 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
-import { BookOpen, Users, Award, TrendingUp, Star, ArrowRight, Loader2, CheckCircle } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { coursesService, Course } from "@/services/courses";
 import { paymentService } from "@/services/payments";
 import { useToast } from "@/hooks/use-toast";
 import elevateSkillLogo from "@/assets/elevate-skill-logo.png";
 import heroImage from "@/assets/hero-bg.jpg";
-import digitalMarketingImg from "@/assets/digital-marketing.jpg";
-import graphicsDesignImg from "@/assets/graphics-design.jpg";
-import videoEditingImg from "@/assets/video-editing.jpg";
-import englishCommunicationImg from "@/assets/english-communication.jpg";
-import webDevelopmentImg from "@/assets/web-development.jpg";
-import appDevelopmentImg from "@/assets/app-development.jpg";
-import { getImageUrl } from "@/services/admin";
+import { 
+  ArrowRight, 
+  Users, 
+  Award, 
+  TrendingUp, 
+  Loader2, 
+  BookOpen, 
+  Star, 
+  CheckCircle 
+} from "lucide-react";
+
+// Helper function for image URLs
+const getImageUrl = (imageName: string) => {
+  return `/src/assets/${imageName}`;
+};
+
+// Import new landing page sections
+import { HeroSection } from "./landing/HeroSection";
+import { FeaturesSection } from "./landing/FeaturesSection";
+import { CoursesShowcase } from "./landing/CoursesShowcase";
+import { CTASection } from "./landing/CTASection";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -25,6 +39,7 @@ const LandingPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [enrolledCourses, setEnrolledCourses] = useState<Set<string>>(new Set());
   const [checkingEnrollment, setCheckingEnrollment] = useState<string | null>(null);
+  const coursesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -112,27 +127,45 @@ const LandingPage = () => {
     navigate(`/payment?courseId=${course.id}`);
   };
 
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-background"
+    >
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        className="border-b glass backdrop-blur-xl sticky top-0 z-50 shadow-sm"
+      >
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
             <img src={elevateSkillLogo} alt="Elevate Skill" className="h-8 w-8" />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Elevate Skill
             </h1>
-          </div>
+          </motion.div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => navigate('/login')}>
               Login
             </Button>
-            <Button variant="hero" onClick={() => navigate('/register')}>
+            <Button variant="gradient" onClick={() => navigate('/register')} animated>
               Get Started
             </Button>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">
@@ -396,7 +429,7 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
-    </div>
+    </motion.div>
   );
 };
 

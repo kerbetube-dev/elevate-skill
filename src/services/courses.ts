@@ -13,6 +13,15 @@ export interface Course {
   instructor: string;
 }
 
+export interface EnrichedCourse extends Course {
+  enrollmentId?: string;
+  enrolledAt?: string;
+  progress?: number;
+  completedLessons?: number;
+  totalLessons?: number;
+  nextLesson?: string;
+}
+
 export interface Enrollment {
   id: string;
   courseId: string;

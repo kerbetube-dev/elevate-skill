@@ -92,14 +92,24 @@ class DatabaseOperations:
         """Create referral in in-memory database (fallback)"""
         referral_id = str(uuid.uuid4())
 
+        # Check if this is a completed referral (has reward_earned in data)
+        status = referral_data.get("status", "pending")
+        reward = referral_data.get("reward_earned", 0)
+
         referral = {
             "id": referral_id,
             "referrer_id": referrer_id,
-            "status": "pending",
-            "reward_earned": 0,
+            "status": status,
+            "reward_earned": reward,
             "date_referred": datetime.utcnow().isoformat(),
-            **referral_data
+            **{k: v for k, v in referral_data.items() if k not in ["status", "reward_earned"]}
         }
+
+        # If completed, update referrer's earnings in memory
+        if status == "completed":
+            # Update referrer's earnings in memory
+            if referrer_id in inmemory_db.users:
+                inmemory_db.users[referrer_id]["totalEarnings"] += reward
 
         inmemory_db.referrals[referral_id] = referral
         return referral
@@ -653,6 +663,52 @@ class DatabaseOperations:
                 print("Using in-memory database fallback")
                 # Use in-memory database as fallback
                 return self._create_referral_inmemory(referrer_id, referral_data)
+            raise
+
+    async def create_completed_referral(self, referrer_id: str, referral_data: dict, reward_amount: int = 100) -> dict:
+        """Create a completed referral with immediate reward (for registration-based referrals)"""
+        try:
+            referral_id = str(uuid.uuid4())
+
+            query = """
+            INSERT INTO referrals (id, referrer_id, name, email, status, reward_earned, date_referred)
+            VALUES (:id, :referrer_id, :name, :email, :status, :reward_earned, :date_referred)
+            RETURNING *
+            """
+
+            values = {
+                "id": referral_id,
+                "referrer_id": referrer_id,
+                "status": "completed",
+                "reward_earned": reward_amount,
+                "date_referred": datetime.utcnow(),
+                **referral_data
+            }
+
+            async with get_async_session() as session:
+                row = await session.execute(text(query), values)
+                result = row.mappings().first()
+                await session.commit()
+
+                # Also update the referrer's total earnings
+                await session.execute(
+                    text("UPDATE users SET total_earnings = total_earnings + :amount WHERE id = :user_id"),
+                    {"amount": reward_amount, "user_id": referrer_id}
+                )
+                await session.commit()
+
+            return dict(result) if result else None
+        except Exception as e:
+            print(f"Real database failed: {e}")
+            if USE_INMEMORY_FALLBACK:
+                print("Using in-memory database fallback")
+                # Use in-memory database as fallback
+                referral_data_with_reward = {
+                    **referral_data,
+                    "status": "completed",
+                    "reward_earned": reward_amount
+                }
+                return self._create_referral_inmemory(referrer_id, referral_data_with_reward)
             raise
     
     async def get_user_referrals(self, user_id: str) -> List[dict]:

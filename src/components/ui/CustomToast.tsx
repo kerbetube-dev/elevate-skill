@@ -96,8 +96,8 @@ const ToastContainer: React.FC<ToastContainerProps> = ({
 	onRemove,
 }) => {
 	return (
-		// increase width
-		<div className="top-4 right-4 z-50 fixed space-y-2 w-full">
+		// Smaller, focused container for toasts
+		<div className="top-4 right-4 z-50 fixed space-y-2 max-w-sm">
 			{toasts.map((toast) => (
 				<ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
 			))}
@@ -159,7 +159,7 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
 	return (
 		<div
 			className={`
-        max-w-sm w-full shadow-lg rounded-lg border p-4
+        max-w-xs w-full shadow-lg rounded-lg border p-3
         ${getBackgroundColor()}
         transform transition-all duration-300 ease-in-out
         animate-in slide-in-from-right-full
@@ -168,12 +168,12 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
 			<div className="flex items-start">
 				<div className="flex-shrink-0">{getIcon()}</div>
 				<div className="flex-1 ml-3 w-0">
-					<div className={`text-sm font-medium ${getTextColor()}`}>
+					<div className={`text-xs font-medium ${getTextColor()}`}>
 						{toast.title}
 					</div>
 					{toast.message && (
 						<div
-							className={`mt-1 text-sm ${getTextColor()} opacity-90`}
+							className={`mt-1 text-xs ${getTextColor()} opacity-90`}
 						>
 							{toast.message}
 						</div>
@@ -182,7 +182,7 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
 						<div className="mt-2">
 							<button
 								onClick={toast.action.onClick}
-								className={`text-sm font-medium underline ${getTextColor()} hover:opacity-80`}
+								className={`text-xs font-medium underline ${getTextColor()} hover:opacity-80`}
 							>
 								{toast.action.label}
 							</button>

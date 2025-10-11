@@ -25,6 +25,7 @@ import {
 	Sparkles,
 	Target,
 	RefreshCw,
+	ArrowRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +35,8 @@ import { paymentService, Enrollment } from "@/services/payments";
 import { dashboardService } from "@/services/dashboard";
 import { referralService, ReferralStats, Referral } from "@/services/referrals";
 import { fadeInUp, staggerContainer } from "@/lib/animations";
+import { NoCourses } from "@/components/ui/empty-state";
+import { CourseCardSkeleton } from "@/components/ui/mini-loader";
 
 export function ModernDashboard() {
 	const [activeTab, setActiveTab] = useState("home");
@@ -231,14 +234,12 @@ export function ModernDashboard() {
 					value: dashboardStats.enrolledCourses || 0,
 					icon: BookOpen,
 					gradient: "primary" as const,
-					trend: { value: 12, positive: true },
 				},
 				{
 					title: "Completed",
 					value: dashboardStats.completedCourses || 0,
 					icon: GraduationCap,
 					gradient: "success" as const,
-					trend: { value: 8, positive: true },
 				},
 				{
 					title: "Total Earnings",
@@ -255,7 +256,6 @@ export function ModernDashboard() {
 					value: referralStats?.totalReferrals || 0,
 					icon: Users,
 					gradient: "ocean" as const,
-					trend: { value: 5, positive: true },
 				},
 		  ]
 		: [];
@@ -271,14 +271,17 @@ export function ModernDashboard() {
 			{/* Welcome Header */}
 			<motion.div
 				variants={fadeInUp}
-				className="flex justify-between items-center"
+				className="flex sm:flex-row flex-col sm:justify-between sm:items-start lg:items-center gap-4 space-y-4 sm:space-y-0"
 			>
-				<div>
-					<h1 className="mb-2 font-bold text-4xl">
+				<div className="flex-1">
+					<h1 className="mb-2 font-bold text-2xl sm:text-3xl md:text-4xl leading-tight">
 						Welcome back,{" "}
-						{userData?.fullName?.split(" ")[0] || "Student"}! 👋
+						<span className="text-primary">
+							{userData?.fullName?.split(" ")[0] || "Student"}
+						</span>
+						! 👋
 					</h1>
-					<p className="text-muted-foreground text-lg">
+					<p className="text-muted-foreground text-sm sm:text-base md:text-lg">
 						Ready to continue your learning journey?
 					</p>
 				</div>
@@ -287,9 +290,10 @@ export function ModernDashboard() {
 					size="icon"
 					onClick={() => fetchDashboardData(true)}
 					disabled={refreshing}
+					className="flex-shrink-0 self-start sm:self-auto"
 				>
 					<RefreshCw
-						className={`h-5 w-5 ${
+						className={`h-4 w-4 sm:h-5 sm:w-5 ${
 							refreshing ? "animate-spin" : ""
 						}`}
 					/>
@@ -297,134 +301,102 @@ export function ModernDashboard() {
 			</motion.div>
 
 			{/* Stat Cards */}
-			<StatCards stats={statCardsData} />
+			<StatCards stats={statCardsData} isLoading={!dashboardStats} />
 
-			{/* Main Content Grid */}
-			<div className="gap-8 grid grid-cols-1 lg:grid-cols-3">
-				{/* Left Column - 2/3 width */}
-				<div className="space-y-8 lg:col-span-2">
-					{/* Continue Learning Section */}
-					{enrolledCourses.length > 0 && (
-						<Card className="glass">
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2">
-									<Sparkles className="w-5 h-5 text-primary" />
-									Continue Learning
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<EnhancedCourseGrid
-									courses={enrolledCourses.slice(0, 3)}
-									variant="enrolled"
-									onContinue={handleContinueCourse}
-									onViewDetails={handleViewCourseDetails}
-									paymentRequests={paymentRequests}
-								/>
-							</CardContent>
-						</Card>
-					)}
-				</div>
-
-				{/* Right Column - 1/3 width */}
-				<div className="space-y-8">
-					{/* Overall Progress */}
+			{/* Main Content - Focus on Learning */}
+			<div className="space-y-8">
+				{/* Continue Learning Section */}
+				{enrolledCourses.length > 0 ? (
 					<Card className="glass">
-						<CardHeader>
-							<CardTitle className="flex justify-center items-center gap-2">
-								<Target className="w-5 h-5 text-primary" />
-								Overall Progress
+						<CardHeader className="pb-4">
+							<CardTitle className="flex items-center gap-2 text-lg sm:text-xl md:text-2xl">
+								<Sparkles className="flex-shrink-0 w-5 sm:w-6 h-5 sm:h-6 text-primary" />
+								Continue Learning
 							</CardTitle>
 						</CardHeader>
-						<CardContent className="flex justify-center py-6">
-							<ProgressRing
-								progress={
-									enrolledCourses.length > 0
-										? Math.round(
-												enrolledCourses.reduce(
-													(sum, course) =>
-														sum +
-														(course.progress || 0),
-													0
-												) / enrolledCourses.length
-										  )
-										: 0
-								}
-								size={160}
-								color="url(#gradient)"
+						<CardContent className="pt-0">
+							<EnhancedCourseGrid
+								courses={enrolledCourses.slice(0, 6)}
+								variant="enrolled"
+								onContinue={handleContinueCourse}
+								onViewDetails={handleViewCourseDetails}
+								paymentRequests={paymentRequests}
 							/>
+							{enrolledCourses.length > 6 && (
+								<div className="mt-6 text-center">
+									<Button
+										variant="outline"
+										onClick={() => setActiveTab("enrolled")}
+										className="w-full sm:w-auto"
+									>
+										View All My Courses (
+										{enrolledCourses.length})
+										<ArrowRight className="ml-2 w-4 h-4" />
+									</Button>
+								</div>
+							)}
+						</CardContent>
+					</Card>
+				) : (
+					// No Courses Empty State
+					<NoCourses
+						onBrowseCourses={() => setActiveTab("courses")}
+					/>
+				)}
+
+				{/* Quick Actions Section */}
+				<div className="gap-4 sm:gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+					{/* Browse Courses Card */}
+					<Card
+						className="transition-all duration-200 cursor-pointer hover-lift"
+						onClick={() => setActiveTab("courses")}
+					>
+						<CardContent className="p-4 sm:p-6 text-center">
+							<div className="flex justify-center items-center bg-blue-100 mx-auto mb-3 sm:mb-4 rounded-xl w-10 sm:w-12 h-10 sm:h-12 text-blue-600">
+								<BookOpen className="w-5 sm:w-6 h-5 sm:h-6" />
+							</div>
+							<h3 className="mb-2 font-semibold text-sm sm:text-base">
+								Browse Courses
+							</h3>
+							<p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
+								Discover new skills and advance your career
+							</p>
 						</CardContent>
 					</Card>
 
-					{/* Recent Activity */}
-					<Card className="glass">
-						<CardHeader>
-							<CardTitle className="flex justify-center items-center gap-2">
-								<TrendingUp className="w-5 h-5 text-primary" />
-								Recent Activity
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							{enrolledCourses.length > 0 ? (
-								<div className="space-y-4">
-									{enrolledCourses
-										.slice(0, 5)
-										.map((course, index) => {
-											// Check if this course has a pending payment request
-											const pendingPayment =
-												paymentRequests.some(
-													(request) =>
-														request.courseId ===
-															course.id &&
-														request.status ===
-															"pending"
-												);
+					{/* Refer Friends Card */}
+					<Card
+						className="transition-all duration-200 cursor-pointer hover-lift"
+						onClick={() => setActiveTab("refer")}
+					>
+						<CardContent className="p-4 sm:p-6 text-center">
+							<div className="flex justify-center items-center bg-green-100 mx-auto mb-3 sm:mb-4 rounded-xl w-10 sm:w-12 h-10 sm:h-12 text-green-600">
+								<Users className="w-5 sm:w-6 h-5 sm:h-6" />
+							</div>
+							<h3 className="mb-2 font-semibold text-sm sm:text-base">
+								Refer Friends
+							</h3>
+							<p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
+								Earn rewards by sharing with friends
+							</p>
+						</CardContent>
+					</Card>
 
-											return (
-												<div
-													key={course.id}
-													className="flex items-center gap-3 bg-white/5 p-3 border border-white/10 rounded-lg"
-												>
-													<div
-														className={`w-2 h-2 rounded-full ${
-															pendingPayment
-																? "bg-yellow-500"
-																: "bg-primary"
-														}`}
-													/>
-													<div className="flex-1">
-														<p className="font-medium text-sm">
-															{course.title}
-														</p>
-														<p className="text-muted-foreground text-xs">
-															{pendingPayment
-																? "Payment pending approval"
-																: `${
-																		course.progress ||
-																		0
-																  }% completed`}
-														</p>
-													</div>
-													<div className="text-muted-foreground text-xs">
-														{course.enrolledAt
-															? new Date(
-																	course.enrolledAt
-															  ).toLocaleDateString()
-															: "Recently"}
-													</div>
-												</div>
-											);
-										})}
-								</div>
-							) : (
-								<div className="py-8 text-muted-foreground text-center">
-									<BookOpen className="opacity-50 mx-auto mb-4 w-12 h-12" />
-									<p>No recent activity</p>
-									<p className="text-sm">
-										Enroll in courses to see your progress
-										here
-									</p>
-								</div>
-							)}
+					{/* Earnings Card */}
+					<Card
+						className="sm:col-span-2 lg:col-span-1 transition-all duration-200 cursor-pointer hover-lift"
+						onClick={() => setActiveTab("withdrawals")}
+					>
+						<CardContent className="p-4 sm:p-6 text-center">
+							<div className="flex justify-center items-center bg-orange-100 mx-auto mb-3 sm:mb-4 rounded-xl w-10 sm:w-12 h-10 sm:h-12 text-orange-600">
+								<DollarSign className="w-5 sm:w-6 h-5 sm:h-6" />
+							</div>
+							<h3 className="mb-2 font-semibold text-sm sm:text-base">
+								Manage Earnings
+							</h3>
+							<p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
+								Track and withdraw your earnings
+							</p>
 						</CardContent>
 					</Card>
 				</div>
@@ -441,18 +413,28 @@ export function ModernDashboard() {
 			exit={{ opacity: 0, y: -20 }}
 			className="space-y-6"
 		>
-			<div>
-				<h2 className="mb-2 font-bold text-3xl">Available Courses</h2>
-				<p className="text-muted-foreground">
+			<div className="space-y-2">
+				<h2 className="font-bold text-xl sm:text-2xl md:text-3xl">
+					Available Courses
+				</h2>
+				<p className="text-muted-foreground text-sm sm:text-base">
 					Explore our expert-led courses
 				</p>
 			</div>
-			<EnhancedCourseGrid
-				courses={courses}
-				variant="default"
-				onEnroll={handleEnrollCourse}
-				onViewDetails={handleViewCourseDetails}
-			/>
+			{loading ? (
+				<div className="gap-4 sm:gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+					{Array.from({ length: 6 }).map((_, index) => (
+						<CourseCardSkeleton key={index} />
+					))}
+				</div>
+			) : (
+				<EnhancedCourseGrid
+					courses={courses}
+					variant="default"
+					onEnroll={handleEnrollCourse}
+					onViewDetails={handleViewCourseDetails}
+				/>
+			)}
 		</motion.div>
 	);
 
@@ -465,9 +447,11 @@ export function ModernDashboard() {
 			exit={{ opacity: 0, y: -20 }}
 			className="space-y-6"
 		>
-			<div>
-				<h2 className="mb-2 font-bold text-3xl">My Courses</h2>
-				<p className="text-muted-foreground">
+			<div className="space-y-2">
+				<h2 className="font-bold text-xl sm:text-2xl md:text-3xl">
+					My Courses
+				</h2>
+				<p className="text-muted-foreground text-sm sm:text-base">
 					{enrolledCourses.length} course
 					{enrolledCourses.length !== 1 ? "s" : ""} in progress
 				</p>
@@ -481,25 +465,7 @@ export function ModernDashboard() {
 					paymentRequests={paymentRequests}
 				/>
 			) : (
-				<Card className="p-12">
-					<div className="space-y-4 text-center">
-						<GraduationCap className="opacity-50 mx-auto w-16 h-16 text-muted-foreground" />
-						<h3 className="font-semibold text-xl">
-							No Courses Yet
-						</h3>
-						<p className="mx-auto max-w-md text-muted-foreground">
-							You haven't enrolled in any courses yet. Explore our
-							available courses and start learning today!
-						</p>
-						<Button
-							variant="gradient"
-							onClick={() => setActiveTab("courses")}
-						>
-							<BookOpen className="mr-2 w-4 h-4" />
-							Browse Courses
-						</Button>
-					</div>
-				</Card>
+				<NoCourses onBrowseCourses={() => setActiveTab("courses")} />
 			)}
 		</motion.div>
 	);
@@ -555,13 +521,15 @@ export function ModernDashboard() {
 			exit={{ opacity: 0, y: -20 }}
 			className="space-y-6"
 		>
-			<div>
-				<h2 className="mb-2 font-bold text-3xl">Withdrawals</h2>
-				<p className="text-muted-foreground">
+			<div className="space-y-2">
+				<h2 className="font-bold text-xl sm:text-2xl md:text-3xl">
+					Withdrawals
+				</h2>
+				<p className="text-muted-foreground text-sm sm:text-base">
 					Manage your earnings withdrawals
 				</p>
 			</div>
-			<div className="gap-6 grid grid-cols-1 lg:grid-cols-2">
+			<div className="gap-4 sm:gap-6 grid grid-cols-1 lg:grid-cols-2">
 				<WithdrawalRequest />
 				<WithdrawalHistory />
 			</div>
@@ -570,8 +538,8 @@ export function ModernDashboard() {
 
 	if (loading) {
 		return (
-			<div className="flex justify-center items-center min-h-screen">
-				<div className="space-y-4 text-center">
+			<div className="flex justify-center items-center p-4 min-h-screen">
+				<div className="space-y-4 sm:space-y-6 w-full max-w-sm text-center">
 					<motion.div
 						animate={{ rotate: 360 }}
 						transition={{
@@ -580,11 +548,16 @@ export function ModernDashboard() {
 							ease: "linear",
 						}}
 					>
-						<BookOpen className="mx-auto w-16 h-16 text-primary" />
+						<BookOpen className="mx-auto w-10 sm:w-12 md:w-16 h-10 sm:h-12 md:h-16 text-primary" />
 					</motion.div>
-					<p className="text-muted-foreground text-lg">
-						Loading your dashboard...
-					</p>
+					<div className="space-y-2">
+						<p className="font-medium text-sm sm:text-base md:text-lg">
+							Loading your dashboard...
+						</p>
+						<p className="text-muted-foreground text-xs sm:text-sm">
+							Getting your latest data
+						</p>
+					</div>
 				</div>
 			</div>
 		);
@@ -602,13 +575,14 @@ export function ModernDashboard() {
 						<div className="flex gap-2 mt-4">
 							<Button
 								onClick={() => fetchDashboardData()}
-								className="flex-1"
+								className="flex-1 text-sm"
 							>
 								Retry
 							</Button>
 							<Button
 								variant="outline"
 								onClick={() => navigate("/")}
+								className="flex-1 text-sm"
 							>
 								Go Home
 							</Button>

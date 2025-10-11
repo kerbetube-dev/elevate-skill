@@ -44,7 +44,6 @@ export function Navbar({ className = "" }: NavbarProps) {
 	const navItems = [
 		{ href: "#home", label: "Home", icon: Home },
 		{ href: "#features", label: "Features", icon: Star },
-		{ href: "#courses", label: "Courses", icon: BookOpen },
 		{ href: "#testimonials", label: "Reviews", icon: Star },
 		{ href: "#contact", label: "Contact", icon: Phone },
 	];

@@ -189,28 +189,28 @@ export function HeroSection() {
 					>
 						{[
 							{
-								value: stats.totalStudents,
+								value: 237,
 								suffix: "+",
 								label: "Active Students",
 								color: "text-primary",
 								icon: <TrendingUp className="w-5 h-5" />,
 							},
 							{
-								value: stats.totalCourses,
+								value: 7,
 								suffix: "",
 								label: "Expert Courses",
 								color: "text-accent",
 								icon: <Target className="w-5 h-5" />,
 							},
 							{
-								value: stats.successRate,
+								value: 87,
 								suffix: "%",
 								label: "Success Rate",
 								color: "text-emerald-600",
 								icon: <Sparkles className="w-5 h-5" />,
 							},
 							{
-								value: stats.averageRating,
+								value: 4.7,
 								suffix: "⭐",
 								label: "Average Rating",
 								color: "text-amber-600",

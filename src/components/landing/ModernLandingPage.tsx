@@ -39,11 +39,6 @@ const ModernLandingPage = () => {
 					<FeaturesSection />
 				</section>
 
-				{/* Courses Showcase Section */}
-				<section id="courses" className="scroll-mt-20">
-					<CoursesShowcase />
-				</section>
-
 				{/* Testimonials Section */}
 				<section id="testimonials" className="scroll-mt-20">
 					<TestimonialsSection />

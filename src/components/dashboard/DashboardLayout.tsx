@@ -51,7 +51,7 @@ const tabs: Tab[] = [
 	{ id: "enrolled", label: "My Courses", icon: GraduationCap },
 	{ id: "refer", label: "Refer Friends", icon: Share2 },
 	{ id: "withdrawals", label: "Withdrawals", icon: DollarSign },
-	{ id: "payments", label: "Payment Methods", icon: CreditCard },
+	// { id: "payments", label: "Payment Methods", icon: CreditCard },
 	{ id: "settings", label: "Settings", icon: Settings },
 ];
 

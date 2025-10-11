@@ -538,17 +538,17 @@ export function ModernDashboard() {
 		</motion.div>
 	);
 
-	// Payment Management Tab Content
-	const renderPaymentsTab = () => (
-		<motion.div
-			key="payments"
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
-			exit={{ opacity: 0, y: -20 }}
-		>
-			<PaymentManagement />
-		</motion.div>
-	);
+	// // Payment Management Tab Content
+	// const renderPaymentsTab = () => (
+	// 	<motion.div
+	// 		key="payments"
+	// 		initial={{ opacity: 0, y: 20 }}
+	// 		animate={{ opacity: 1, y: 0 }}
+	// 		exit={{ opacity: 0, y: -20 }}
+	// 	>
+	// 		<PaymentManagement />
+	// 	</motion.div>
+	// );
 
 	// Settings Tab Content
 	const renderSettingsTab = () => (
@@ -633,7 +633,7 @@ export function ModernDashboard() {
 				{activeTab === "enrolled" && renderEnrolledTab()}
 				{activeTab === "refer" && renderReferTab()}
 				{activeTab === "withdrawals" && renderWithdrawalsTab()}
-				{activeTab === "payments" && renderPaymentsTab()}
+				{/* {activeTab === "payments" && renderPaymentsTab()} */}
 				{activeTab === "settings" && renderSettingsTab()}
 			</AnimatePresence>
 		</DashboardLayout>

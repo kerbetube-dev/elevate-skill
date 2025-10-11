@@ -4,8 +4,9 @@
  */
 
 import api from "./api";
+import { env } from "@/config/env";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = env.API_BASE_URL;
 
 // ===================================
 // Types

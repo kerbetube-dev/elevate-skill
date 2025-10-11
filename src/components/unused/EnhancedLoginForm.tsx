@@ -12,9 +12,9 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToastNotifications } from "./ui/CustomToast";
-import { useErrorHandler } from "../utils/errorHandler";
-import { Form, FormField, createLoginForm } from "./ui/CustomForm";
+import { useToastNotifications } from "../ui/CustomToast";
+import { useErrorHandler } from "../../utils/errorHandler";
+import { Form, FormField, createLoginForm } from "../ui/CustomForm";
 import { Eye, EyeOff, BookOpen, ArrowRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "@/services/auth";

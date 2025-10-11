@@ -11,9 +11,9 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { useToastNotifications } from "./ui/CustomToast";
-import { useErrorHandler } from "../utils/errorHandler";
-import { Form, FormField, createRegistrationForm } from "./ui/CustomForm";
+import { useToastNotifications } from "../ui/CustomToast";
+import { useErrorHandler } from "../../utils/errorHandler";
+import { Form, FormField, createRegistrationForm } from "../ui/CustomForm";
 import { BookOpen, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { authService } from "@/services/auth";

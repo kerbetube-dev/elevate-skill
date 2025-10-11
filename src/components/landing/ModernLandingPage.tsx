@@ -12,9 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import elevateSkillLogo from "@/assets/elevate-skill-logo.png";
 
 // Import new landing page sections
-import { HeroSection } from "./landing/HeroSection";
-import { FeaturesSection } from "./landing/FeaturesSection";
-import { CTASection } from "./landing/CTASection";
+import { HeroSection } from "./HeroSection";
+import { FeaturesSection } from "./FeaturesSection";
+import { CTASection } from "./CTASection";
 import { Course } from "@/services/courses";
 import paymentService from "@/services/payments";
 

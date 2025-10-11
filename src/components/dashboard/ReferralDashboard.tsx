@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import {
 	Share2,
@@ -23,6 +22,8 @@ import {
 import { useState } from "react";
 import { staggerContainer, staggerItem } from "@/lib/animations";
 import { useToast } from "@/hooks/use-toast";
+import { QRCodeButton } from "@/components/ui/qr-code-generator";
+import { formatDate } from "@/utils/dateUtils";
 
 interface Referral {
 	id: string;
@@ -90,10 +91,6 @@ export function ReferralDashboard({
 			handleCopyLink();
 		}
 	};
-
-	// Calculate progress to next milestone
-	const nextMilestone = Math.ceil(totalReferrals / 5) * 5 || 5;
-	const milestoneProgress = (totalReferrals / nextMilestone) * 100;
 
 	return (
 		<motion.div
@@ -254,6 +251,11 @@ export function ReferralDashboard({
 								<Share2 className="mr-2 w-4 h-4" />
 								Share with Friends
 							</Button>
+							<QRCodeButton
+								referralCode={referralCode}
+								referralLink={referralLink}
+								variant="outline"
+							/>
 						</div>
 
 						<div className="bg-primary/5 p-4 border border-primary/10 rounded-lg">
@@ -271,35 +273,6 @@ export function ReferralDashboard({
 									</p>
 								</div>
 							</div>
-						</div>
-					</CardContent>
-				</Card>
-			</motion.div>
-
-			{/* Milestone Progress */}
-			<motion.div variants={staggerItem}>
-				<Card className="glass">
-					<CardHeader>
-						<CardTitle>Milestone Progress</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-3">
-							<div className="flex justify-between items-center">
-								<span className="text-muted-foreground text-sm">
-									Next milestone: {nextMilestone} referrals
-								</span>
-								<span className="font-semibold">
-									{totalReferrals}/{nextMilestone}
-								</span>
-							</div>
-							<Progress
-								value={milestoneProgress}
-								className="h-3"
-							/>
-							<p className="text-muted-foreground text-xs">
-								{nextMilestone - totalReferrals} more
-								referral(s) to unlock bonus rewards!
-							</p>
 						</div>
 					</CardContent>
 				</Card>
@@ -354,14 +327,10 @@ export function ReferralDashboard({
 													{referral.referredUserName}
 												</p>
 												<p className="text-muted-foreground text-xs">
-													Referred{" "}
-													{new Date(
-														referral.createdAt
-													).toLocaleDateString()}
 													{referral.completedAt &&
-														` • Completed ${new Date(
+														` • Completed ${formatDate(
 															referral.completedAt
-														).toLocaleDateString()}`}
+														)}`}
 												</p>
 											</div>
 										</div>

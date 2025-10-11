@@ -22,6 +22,8 @@ import {
 	X,
 	ChevronLeft,
 	ChevronRight,
+	CreditCard,
+	Settings,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import elevateSkillLogo from "@/assets/elevate-skill-logo.png";
@@ -49,6 +51,8 @@ const tabs: Tab[] = [
 	{ id: "enrolled", label: "My Courses", icon: GraduationCap },
 	{ id: "refer", label: "Refer Friends", icon: Share2 },
 	{ id: "withdrawals", label: "Withdrawals", icon: DollarSign },
+	{ id: "payments", label: "Payment Methods", icon: CreditCard },
+	{ id: "settings", label: "Settings", icon: Settings },
 ];
 
 export function DashboardLayout({

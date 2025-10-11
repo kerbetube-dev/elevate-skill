@@ -12,6 +12,8 @@ import { EnhancedCourseGrid } from "./EnhancedCourseCard";
 import { ReferralDashboard } from "./ReferralDashboard";
 import { WithdrawalRequest } from "./WithdrawalRequest";
 import { WithdrawalHistory } from "./WithdrawalHistory";
+import { PaymentManagement } from "./PaymentManagement";
+import { UserSettings } from "./UserSettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -536,6 +538,30 @@ export function ModernDashboard() {
 		</motion.div>
 	);
 
+	// Payment Management Tab Content
+	const renderPaymentsTab = () => (
+		<motion.div
+			key="payments"
+			initial={{ opacity: 0, y: 20 }}
+			animate={{ opacity: 1, y: 0 }}
+			exit={{ opacity: 0, y: -20 }}
+		>
+			<PaymentManagement />
+		</motion.div>
+	);
+
+	// Settings Tab Content
+	const renderSettingsTab = () => (
+		<motion.div
+			key="settings"
+			initial={{ opacity: 0, y: 20 }}
+			animate={{ opacity: 1, y: 0 }}
+			exit={{ opacity: 0, y: -20 }}
+		>
+			<UserSettings />
+		</motion.div>
+	);
+
 	if (loading) {
 		return (
 			<div className="flex justify-center items-center p-4 min-h-screen">
@@ -607,6 +633,8 @@ export function ModernDashboard() {
 				{activeTab === "enrolled" && renderEnrolledTab()}
 				{activeTab === "refer" && renderReferTab()}
 				{activeTab === "withdrawals" && renderWithdrawalsTab()}
+				{activeTab === "payments" && renderPaymentsTab()}
+				{activeTab === "settings" && renderSettingsTab()}
 			</AnimatePresence>
 		</DashboardLayout>
 	);

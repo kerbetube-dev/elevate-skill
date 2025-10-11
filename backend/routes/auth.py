@@ -64,16 +64,17 @@ async def register(user: UserRegister):
         if not new_user:
             raise create_database_error("Failed to create user")
         
-        # Handle referral bonus - automatic completion on registration
+        # Handle referral bonus
         if validated_data['referralCode']:
             referrer = await db_ops.find_user_by_referral_code(validated_data['referralCode'])
             if referrer:
-                # Create completed referral with immediate reward
+                # Create referral record
                 referral_data = {
                     "name": validated_data['fullName'],
                     "email": validated_data['email']
                 }
-                await db_ops.create_completed_referral(referrer["id"], referral_data, reward_amount=100)
+                await db_ops.create_referral(referrer["id"], referral_data)
+
         
         # Create token pair using token manager
         user_data = {

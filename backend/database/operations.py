@@ -92,24 +92,14 @@ class DatabaseOperations:
         """Create referral in in-memory database (fallback)"""
         referral_id = str(uuid.uuid4())
 
-        # Check if this is a completed referral (has reward_earned in data)
-        status = referral_data.get("status", "pending")
-        reward = referral_data.get("reward_earned", 0)
-
         referral = {
             "id": referral_id,
             "referrer_id": referrer_id,
-            "status": status,
-            "reward_earned": reward,
+            "status": "pending",
+            "reward_earned": 0,
             "date_referred": datetime.utcnow().isoformat(),
-            **{k: v for k, v in referral_data.items() if k not in ["status", "reward_earned"]}
+            **referral_data
         }
-
-        # If completed, update referrer's earnings in memory
-        if status == "completed":
-            # Update referrer's earnings in memory
-            if referrer_id in inmemory_db.users:
-                inmemory_db.users[referrer_id]["totalEarnings"] += reward
 
         inmemory_db.referrals[referral_id] = referral
         return referral
@@ -665,7 +655,7 @@ class DatabaseOperations:
                 return self._create_referral_inmemory(referrer_id, referral_data)
             raise
 
-    async def create_completed_referral(self, referrer_id: str, referral_data: dict, reward_amount: int = 100) -> dict:
+
         """Create a completed referral with immediate reward (for registration-based referrals)"""
         try:
             referral_id = str(uuid.uuid4())
